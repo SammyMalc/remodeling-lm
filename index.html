@@ -457,8 +457,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 </head>
 <body>
 
-<!-- CONFIG -->
-<div id="config-overlay">
+<!-- CONFIG (désactivé - JSONBin) -->
+<div id="config-overlay" style="display:none!important">
   <div class="cfg-card">
     <div class="cfg-logo"><div class="lm-pill">Leroy Merlin</div><span style="font-size:14px;font-weight:600;color:var(--text2)">Configuration · Livry-Gargan</span></div>
     <div class="cfg-title">Connexion au Google Sheet</div>
@@ -632,8 +632,9 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
 <script>
 // ══ CONFIG ══
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxvP4fEdud460mbjaIFdh4xHZPx9CbS9SXyV5QSikix46rcPWOENyc9zZhyCxYRdn7PZQ/exec';
-const LS_SHEET = 'lm_sheet_id_v2';
+const JSONBIN_ID  = '69d51152856a6821890a3846';
+const JSONBIN_KEY = '$2a$10$qMJ4J.xs3uQaoKneSBNZ/O9fHb2W2grN/PrhwIBGhwgUiWX82w4g.';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 const LS_USER  = 'lm_user_v2';
 const POLL_MS  = 12000;
 const DATA_VERSION = 2; // Incrementer pour forcer le rechargement des rayons par défaut
@@ -736,35 +737,26 @@ function migrate(r){
 
 // ══ GAS / SHEET ══
 async function sheetRead(){
-  // JSONP pour contourner CORS en lecture
-  return new Promise((resolve, reject)=>{
-    const cbName = 'cb_' + Date.now();
-    const script = document.createElement('script');
-    let done = false;
-    const timer = setTimeout(()=>{
-      if(!done){ done=true; cleanup(); reject(new Error('Timeout')); }
-    }, 8000);
-    window[cbName] = (data)=>{
-      if(!done){ done=true; cleanup(); resolve(data||null); }
-    };
-    function cleanup(){
-      clearTimeout(timer);
-      delete window[cbName];
-      if(script.parentNode) script.parentNode.removeChild(script);
-    }
-    script.onerror = ()=>{ if(!done){ done=true; cleanup(); reject(new Error('Script error')); } };
-    script.src = GAS_URL + '?callback=' + cbName + '&t=' + Date.now();
-    document.head.appendChild(script);
+  const r = await fetch(JSONBIN_URL + '/latest', {
+    headers: { 'X-Master-Key': JSONBIN_KEY, 'X-Bin-Meta': 'false' },
+    cache: 'no-store'
   });
+  if(!r.ok) throw new Error('JSONBin read error ' + r.status);
+  const data = await r.json();
+  return data && data.rayons ? data : null;
 }
 async function sheetWrite(data){
-  localStorage.setItem('lm_state_bk',JSON.stringify(data));
-  // POST no-cors : on envoie, on ne peut pas lire la réponse — c'est OK
-  const fd = new FormData();
-  fd.append('payload', JSON.stringify(data));
+  localStorage.setItem('lm_state_bk', JSON.stringify(data));
   try{
-    await fetch(GAS_URL, {method:'POST', mode:'no-cors', body:fd});
-  }catch(e){ console.warn('Write error:', e); }
+    await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_KEY
+      },
+      body: JSON.stringify(data)
+    });
+  } catch(e){ console.warn('JSONBin write error:', e); }
 }
 
 // ══ CONFIG ══
@@ -1485,11 +1477,8 @@ function initDragHandles(){
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
-  // Init drag handles
   setTimeout(initDragHandles, 200);
-  const savedSheet=localStorage.getItem(LS_SHEET)||sheetId;
   const savedUser=localStorage.getItem(LS_USER);
-  sheetId=savedSheet;
   if(savedUser&&TEAM.find(m=>m.name===savedUser)){selectUser(savedUser);}
   else{showAuth();}
 });
