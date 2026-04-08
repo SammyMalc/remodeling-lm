@@ -1343,7 +1343,7 @@ function renderDetail(){
         <div>
           <div class="dt-name">
           <span id="rayon-name-${r.id}">${esc(r.name)}</span>
-          <button onclick="startRenameRayon('${r.id}')" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:var(--font);margin-left:8px;vertical-align:middle;">✏️ Renommer</button>
+          <button onclick="startRenameRayon(this)" data-rid="${r.id}" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;font-family:var(--font);margin-left:8px;vertical-align:middle;">✏️ Renommer</button>
           ${statusBadge(r)} ${urgC?`<span class="badge-urgent">⚡ ${urgC} urgent${urgC>1?'s':''}</span>`:''}</div>
           <div class="dt-meta">
             <span class="dt-utag ${uc}">${r.universe==='CUISINE'?'🍳 Cuisine':'📦 Rangement'}</span>
@@ -1483,8 +1483,9 @@ function switchUniverse(rid){
   save(`↔ "${r.name}" : ${oldU} → ${r.universe}`);
 }
 
-function startRenameRayon(rid){
+function startRenameRayon(btn){
   if(event) event.stopPropagation();
+  const rid = btn.dataset.rid;
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
   const span=document.getElementById('rayon-name-'+rid);if(!span)return;
   const old=r.name;
