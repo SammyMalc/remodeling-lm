@@ -1857,10 +1857,11 @@ window.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('resize', ()=>{ if(!isMobile()) document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; }); else mobileInit(); });
   const savedUser=localStorage.getItem(LS_USER);
   if(savedUser&&TEAM.find(m=>m.name===savedUser)){
-    selectUser(savedUser);
+    // Prénom connu → splash 1.5s puis chargement direct
+    setTimeout(()=>{ selectUser(savedUser); }, 1500);
   } else {
-    hideSplash(); // Masquer le splash AVANT l'écran de choix de prénom
-    showAuth();
+    // Nouveau navigateur → splash 1.5s puis écran de choix de prénom
+    setTimeout(()=>{ hideSplash(); showAuth(); }, 1500);
   }
 });
 </script>
