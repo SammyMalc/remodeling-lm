@@ -1361,6 +1361,10 @@ function renderDetail(){
             <button onclick="switchUniverse('${r.id}')" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:var(--font);" title="Changer d'univers">⇄ Changer</button>
             <span style="color:var(--text3)">Leroy Merlin Livry-Gargan</span>
           </div>
+          <div class="color-picker-row">
+            <span class="color-picker-label">Couleur :</span>
+            ${COLOR_PALETTE.map(col=>`<div class="color-swatch${r.color===col?' selected':''}" style="background:${col}" data-rid="${r.id}" data-col="${col}" onclick="setRayonColorEl(this)" title="${col}"></div>`).join('')}
+          </div>
         </div>
       </div>
       <select class="status-sel" onchange="setRayonStatus('${r.id}',this.value)">
@@ -1487,6 +1491,10 @@ function addTask(rid){
 function delTask(rid,tid){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);r.tasks=(r.tasks||[]).filter(x=>x.id!==tid);save(`− Tâche "${t?t.label:''}" supprimée`);}
 function delRayon(rid){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;if(!confirm(`Supprimer "${r.name}" ?`))return;if(selectedId===rid)selectedId=null;state.rayons=(state.rayons||[]).filter(x=>x.id!==rid);save(`− Rayon "${r.name}" supprimé`);}
 function setRayonStatus(rid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;r.status=v;save(`Rayon "${r.name}" → ${v}`);}
+function setRayonColorEl(el){
+  const rid=el.dataset.rid, color=el.dataset.col;
+  setRayonColor(rid, color);
+}
 function setRayonColor(rid, color){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
   r.color=color;
