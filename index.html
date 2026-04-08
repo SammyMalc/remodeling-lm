@@ -888,9 +888,10 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
 <script>
 // ══ CONFIG ══
-const JSONBIN_ID  = '69d51152856a6821890a3846';
-const JSONBIN_KEY = '$2a$10$qMJ4J.xs3uQaoKneSBNZ/O9fHb2W2grN/PrhwIBGhwgUiWX82w4g.';
-const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
+const JSONBIN_ID      = '69d51152856a6821890a3846';
+const JSONBIN_KEY     = '$2a$10$qMJ4J.xs3uQaoKneSBNZ/O9fHb2W2grN/PrhwIBGhwgUiWX82w4g.';
+const JSONBIN_READ_KEY= '$2a$10$aY9pWpTN5QMqGrnBwMCHuu4ASXoV7FDsyOAq.IyySs5uuYDmqER0e';
+const JSONBIN_URL     = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 const LS_USER  = 'lm_user_v2';
 const POLL_MS  = 12000;
 const DATA_VERSION = 2; // Incrementer pour forcer le rechargement des rayons par défaut
@@ -993,13 +994,35 @@ function migrate(r){
 
 // ══ GAS / SHEET ══
 async function sheetRead(){
-  const r = await fetch(JSONBIN_URL + '/latest', {
-    headers: { 'X-Master-Key': JSONBIN_KEY, 'X-Bin-Meta': 'false' },
-    cache: 'no-store'
-  });
-  if(!r.ok) throw new Error('JSONBin read error ' + r.status);
-  const data = await r.json();
-  return data && data.rayons ? data : null;
+  // Essai 1 : avec X-Master-Key
+  try {
+    const r = await fetch(JSONBIN_URL + '/latest', {
+      headers: {
+        'X-Master-Key': JSONBIN_KEY,
+        'X-Access-Key': JSONBIN_READ_KEY,
+        'X-Bin-Meta': 'false'
+      },
+      cache: 'no-store'
+    });
+    if(r.ok){
+      const data = await r.json();
+      if(data && data.rayons) return data;
+    }
+  } catch(e){ console.warn('JSONBin read attempt 1 failed:', e); }
+
+  // Essai 2 : sans header (bin public)
+  try {
+    const r2 = await fetch(JSONBIN_URL + '/latest?meta=false', { cache: 'no-store' });
+    if(r2.ok){
+      const data2 = await r2.json();
+      if(data2 && data2.rayons) return data2;
+    }
+  } catch(e){ console.warn('JSONBin read attempt 2 failed:', e); }
+
+  // Fallback : localStorage
+  const bk = localStorage.getItem('lm_state_bk');
+  if(bk){ try{ const d=JSON.parse(bk); if(d&&d.rayons) return d; }catch(e){} }
+  return null;
 }
 async function sheetWrite(data){
   localStorage.setItem('lm_state_bk', JSON.stringify(data));
