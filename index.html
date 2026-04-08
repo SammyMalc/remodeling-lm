@@ -1642,8 +1642,13 @@ function renderMyTasks(){
 }
 
 function goToTask(rayonId, taskId){
-  // Naviguer vers le rayon et ouvrir le détail de la tâche
   selectedId=rayonId;
+  // Sur mobile : aller sur l'onglet Tâches AVANT le render
+  // pour que mobileEnforce() ne remette pas la colonne précédente
+  if(isMobile()){
+    mobileCurrentCol='col-detail';
+    mobileGoTo('col-detail','tab-taches');
+  }
   render();
   // Ouvrir le détail de la tâche après le rendu
   setTimeout(()=>{
@@ -1651,11 +1656,12 @@ function goToTask(rayonId, taskId){
     if(el){
       el.classList.add('open');
       openTaskIds.add(taskId);
-      // Scroller jusqu'à la tâche
       const card=el.closest('.task-card');
       if(card)card.scrollIntoView({behavior:'smooth', block:'center'});
     }
-  }, 80);
+    // Re-forcer l'onglet Tâches après mobileEnforce()
+    if(isMobile()) mobileGoTo('col-detail','tab-taches');
+  }, 120);
 }
 
 // ══ TÂCHES ÉQUIPE ══
