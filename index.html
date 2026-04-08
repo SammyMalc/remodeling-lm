@@ -1075,13 +1075,38 @@ function logout(){clearInterval(pollTimer);currentUser=null;document.getElementB
 
 // ══ LOAD ══
 function ldMsg(m){document.getElementById('ld-msg').textContent=m;}
-function ldErr(m){const el=document.getElementById('ld-err');el.innerHTML=m;el.style.display='block';document.getElementById('ld-retry').style.display='block';document.getElementById('ld-msg').style.display='none';hideSplash();}
+function ldErr(m){
+  const el=document.getElementById('ld-err');el.innerHTML=m;el.style.display='block';
+  document.getElementById('ld-retry').style.display='block';
+  document.getElementById('ld-msg').style.display='none';
+  hideSplash();
+}
 
 async function loadData(){
   document.getElementById('ld-err').style.display='none';
   document.getElementById('ld-retry').style.display='none';
   document.getElementById('ld-msg').style.display='block';
-  ldMsg('Connexion au Google Sheet…');
+  ldMsg('Chargement…');
+
+  // Timeout de sécurité : démarre quoi qu'il arrive après 8 secondes
+  const safetyTimer = setTimeout(()=>{
+    console.warn('Timeout — démarrage avec données locales');
+    startWithLocalData();
+  }, 8000);
+
+  function startWithLocalData(){
+    clearTimeout(safetyTimer);
+    const bk=localStorage.getItem('lm_state_bk');
+    if(bk){try{state=JSON.parse(bk);}catch(e){}}
+    if(!state.rayons){state={version:DATA_VERSION,rayons:JSON.parse(JSON.stringify(DEFAULT_RAYONS)),log:[]};}
+    if(!state.log)state.log=[];
+    state.rayons.forEach(migrate);
+    if(!state.retro)state.retro=[];
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='flex';
+    render();startPolling();hideSplash();
+  }
+
   try{
     let data=null;
     try{data=await sheetRead();}catch(e){
@@ -1109,6 +1134,7 @@ async function loadData(){
     state.rayons.forEach(migrate);
     if(!state.retro)state.retro=[];
     lastHash=JSON.stringify(state);
+    clearTimeout(safetyTimer);
     setTimeout(()=>{document.getElementById('loading').style.display='none';document.getElementById('app').style.display='flex';render();startPolling();hideSplash();},300);
   }catch(e){ldErr('<strong>Erreur</strong><br>'+e.message+'<br><br>Vérifiez votre connexion et le déploiement Apps Script.');}
 }
