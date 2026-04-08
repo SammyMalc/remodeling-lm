@@ -1279,7 +1279,15 @@ function render(){
       const p=pct(r),c=barColor(p,r.universe,r.color);
       const div=document.createElement('div');
       div.className='rayon-card-side'+(selectedId===r.id?` active-${uSlug}`:'');
-      if(selectedId===r.id&&r.color){div.style.borderColor=r.color;}
+      // Fond coloré léger selon r.color
+      if(r.color){
+        div.style.background = r.color + '12'; // ~7% opacité
+        div.style.borderColor = r.color + '60'; // bordure légère
+      }
+      if(selectedId===r.id&&r.color){
+        div.style.background = r.color + '22'; // plus marqué si actif
+        div.style.borderColor = r.color;
+      }
       div.onclick=()=>{selectedId=r.id;render();mobileOnRayonSelect();};
       div.innerHTML=`
         <div class="rc-top">
