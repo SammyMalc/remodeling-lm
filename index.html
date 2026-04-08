@@ -1060,30 +1060,17 @@ function migrate(r){
 
 // ══ GAS / SHEET ══
 async function sheetRead(){
-  // Essai 1 : avec X-Master-Key
+  // Lecture avec clé d'accès publique uniquement
   try {
     const r = await fetch(JSONBIN_URL + '/latest', {
-      headers: {
-        'X-Master-Key': JSONBIN_KEY,
-        'X-Access-Key': JSONBIN_READ_KEY,
-        'X-Bin-Meta': 'false'
-      },
+      headers: { 'X-Access-Key': JSONBIN_READ_KEY, 'X-Bin-Meta': 'false' },
       cache: 'no-store'
     });
     if(r.ok){
       const data = await r.json();
       if(data && data.rayons) return data;
     }
-  } catch(e){ console.warn('JSONBin read attempt 1 failed:', e); }
-
-  // Essai 2 : sans header (bin public)
-  try {
-    const r2 = await fetch(JSONBIN_URL + '/latest?meta=false', { cache: 'no-store' });
-    if(r2.ok){
-      const data2 = await r2.json();
-      if(data2 && data2.rayons) return data2;
-    }
-  } catch(e){ console.warn('JSONBin read attempt 2 failed:', e); }
+  } catch(e){ console.warn('JSONBin lecture échouée:', e); }
 
   // Fallback : localStorage
   const bk = localStorage.getItem('lm_state_bk');
@@ -2067,10 +2054,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   const savedUser=localStorage.getItem(LS_USER);
   if(savedUser&&TEAM.find(m=>m.name===savedUser)){
     // Prénom connu → splash 1.5s puis chargement direct
-    setTimeout(()=>{ selectUser(savedUser); }, 1500);
+    setTimeout(()=>{ selectUser(savedUser); }, 3000);
   } else {
     // Nouveau navigateur → splash 1.5s puis écran de choix de prénom
-    setTimeout(()=>{ hideSplash(); showAuth(); }, 1500);
+    setTimeout(()=>{ hideSplash(); showAuth(); }, 3000);
   }
 });
 </script>
