@@ -369,16 +369,21 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
   /* Tâches */
   .task-card{border-radius:14px;margin-bottom:10px;}
-  .task-main{padding:16px 18px;gap:14px;}
-  .task-lbl{font-size:17px;line-height:1.35;}
-  .task-cb{width:28px;height:28px;border-radius:8px;border-width:2.5px;}
+  .task-main{padding:14px 16px;gap:10px;flex-wrap:wrap;align-items:center;}
+  /* Ligne 1 : checkbox + nom */
+  .task-cb{width:28px;height:28px;border-radius:8px;border-width:2.5px;flex-shrink:0;}
   .task-cb.done::after{font-size:15px;}
-  .task-progress-bar{width:80px;height:8px;}
-  .task-progress-pct{font-size:13px;}
-  .badge-urgent{font-size:12px;padding:5px 11px;}
-  .task-assign-pill{font-size:13px;padding:5px 12px;}
-  .task-subtask-count{font-size:14px;padding:5px 11px;}
-  .task-del-btn{opacity:1;font-size:18px;padding:6px 10px;}
+  .task-lbl{font-size:16px;line-height:1.35;flex:1;min-width:120px;}
+  .task-del-btn{opacity:1;font-size:18px;padding:4px 8px;flex-shrink:0;}
+  /* Ligne 2 : indicateurs sur une ligne dédiée */
+  .task-progress-wrap{order:10;flex-basis:100%;display:flex;align-items:center;gap:8px;padding-left:38px;}
+  .task-progress-bar{flex:1;height:8px;}
+  .task-progress-pct{font-size:14px;font-weight:800;min-width:34px;}
+  .task-assign-pill{font-size:12px;padding:4px 10px;flex-shrink:0;}
+  .task-subtask-count{font-size:13px;padding:4px 9px;flex-shrink:0;}
+  .badge-urgent{font-size:11px;padding:4px 9px;order:5;}
+  .task-assign-pill{order:10;}
+  .task-subtask-count{order:10;}
 
   /* Détail tâche */
   .task-detail{padding:16px 18px;gap:16px;}
@@ -1127,6 +1132,7 @@ function render(){
   renderRetro();
   // Mobile
   updateMobileBadge();
+  mobileEnforce();
   // Mes tâches
   renderMyTasks();
   // Tâches équipe
@@ -1650,13 +1656,19 @@ function isMobile(){ return window.innerWidth <= 600; }
 
 function mobileGoTo(colId, tabId){
   if(!isMobile()) return;
-  // Désactiver toutes les colonnes
+  // Forcer toutes les colonnes hors écran
   document.querySelectorAll('.col-panel').forEach(c=>{
     c.classList.remove('mobile-active');
+    c.style.transform = 'translateX(105%)';
+    c.style.zIndex = '1';
   });
-  // Activer la colonne cible
+  // Activer uniquement la colonne cible
   const col = document.getElementById(colId);
-  if(col) col.classList.add('mobile-active');
+  if(col){
+    col.classList.add('mobile-active');
+    col.style.transform = 'translateX(0)';
+    col.style.zIndex = '2';
+  }
   // Mettre à jour les onglets
   document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
   const tab = document.getElementById(tabId);
@@ -1664,9 +1676,19 @@ function mobileGoTo(colId, tabId){
   mobileCurrentCol = colId;
 }
 
+function mobileEnforce(){
+  // Appelé après chaque render() pour éviter les colonnes "bloquées"
+  if(!isMobile()) return;
+  const activeId = mobileCurrentCol || 'col-sidebar';
+  const activeTab = {
+    'col-sidebar':'tab-rayons','col-detail':'tab-taches',
+    'col-retro':'tab-retro','col-mytasks':'tab-moi','col-teamtasks':'tab-equipe'
+  }[activeId] || 'tab-rayons';
+  mobileGoTo(activeId, activeTab);
+}
+
 function mobileInit(){
   if(!isMobile()) return;
-  // Activer la première colonne par défaut
   mobileGoTo('col-sidebar','tab-rayons');
 }
 
