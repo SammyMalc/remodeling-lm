@@ -66,6 +66,20 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .cfg-err{font-size:12px;color:var(--red);margin-top:10px;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;display:none;line-height:1.6;}
 .cfg-note{font-size:11px;color:var(--text3);margin-top:12px;text-align:center;line-height:1.6;}
 
+/* ══ MOT DE PASSE ══ */
+#pwd-overlay{position:fixed;inset:0;background:rgba(10,20,15,.82);backdrop-filter:blur(12px);z-index:2500;display:none;align-items:center;justify-content:center;padding:20px;}
+#pwd-overlay.show{display:flex;}
+.pwd-card{background:var(--bg2);border-radius:var(--radius-xl);padding:40px 44px;max-width:400px;width:100%;box-shadow:var(--shadow-lg);text-align:center;animation:fadeUp .3s ease;}
+.pwd-logo{width:72px;height:72px;border-radius:16px;margin:0 auto 20px;display:block;box-shadow:0 4px 14px rgba(61,145,66,.2);}
+.pwd-title{font-size:22px;font-weight:800;margin-bottom:6px;color:var(--text);}
+.pwd-sub{font-size:14px;color:var(--text2);margin-bottom:28px;}
+.pwd-input{width:100%;background:var(--bg3);border:2px solid var(--border2);color:var(--text);font-size:20px;font-weight:700;padding:14px 18px;border-radius:12px;outline:none;font-family:var(--mono);text-align:center;letter-spacing:4px;margin-bottom:12px;}
+.pwd-input:focus{border-color:var(--green);}
+.pwd-input::placeholder{letter-spacing:0;font-size:14px;font-weight:400;color:var(--text3);}
+.pwd-btn{width:100%;background:var(--green);border:none;color:#fff;font-size:16px;font-weight:800;font-family:var(--font);padding:14px;border-radius:12px;cursor:pointer;transition:background .15s;}
+.pwd-btn:hover{background:var(--green-d);}
+.pwd-err{font-size:13px;color:var(--red);margin-top:10px;min-height:20px;font-weight:600;}
+
 /* ══ AUTH ══ */
 #auth-overlay{position:fixed;inset:0;background:rgba(10,20,15,.75);backdrop-filter:blur(10px);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;}
 #auth-overlay.show{display:flex;}
@@ -738,6 +752,18 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   </div>
 </div>
 
+<!-- MOT DE PASSE -->
+<div id="pwd-overlay">
+  <div class="pwd-card">
+    <img class="pwd-logo" src=" alt=" alt="LM"/>
+    <div class="pwd-title">Accès sécurisé</div>
+    <div class="pwd-sub">Entrez le mot de passe pour continuer</div>
+    <input class="pwd-input" type="password" id="pwd-input" placeholder="Mot de passe" maxlength="20" onkeydown="if(event.key==='Enter')checkPwd()"/>
+    <button class="pwd-btn" onclick="checkPwd()">Continuer →</button>
+    <div class="pwd-err" id="pwd-err"></div>
+  </div>
+</div>
+
 <!-- AUTH -->
 <div id="auth-overlay">
   <div class="auth-card">
@@ -957,6 +983,7 @@ const JSONBIN_READ_KEY= '$2a$10$aY9pWpTN5QMqGrnBwMCHuu4ASXoV7FDsyOAq.IyySs5uuYDm
 const JSONBIN_URL     = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 const LS_USER  = 'lm_user_v2';
 const POLL_MS  = 12000;
+const APP_PWD  = 'LM2026'; // ← Mot de passe de l'application
 const DATA_VERSION = 2; // Incrementer pour forcer le rechargement des rayons par défaut
 
 const TEAM = [
@@ -966,6 +993,7 @@ const TEAM = [
   {name:'Thomas', color:'#0891b2'},
   {name:'Sammy',  color:'#c97c10'},
   {name:'Laura',  color:'#c2276b'},
+  {name:'Hugo',   color:'#0f766e'},
 ];
 
 const C_COLORS = ['#3d9142','#2d8a5e','#4a7e3e','#2e8a72','#5aab5e'];
@@ -1683,6 +1711,31 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 // Fermer avec Échap
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePlans();});
+
+// ══ MOT DE PASSE ══
+function showPwd(){
+  document.getElementById('pwd-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('pwd-input').focus(), 100);
+}
+function hidePwd(){
+  document.getElementById('pwd-overlay').classList.remove('show');
+}
+function checkPwd(){
+  const val = document.getElementById('pwd-input').value;
+  const err = document.getElementById('pwd-err');
+  if(val === APP_PWD){
+    err.textContent = '';
+    document.getElementById('pwd-input').value = '';
+    hidePwd();
+    showAuth();
+  } else {
+    err.textContent = '❌ Mot de passe incorrect';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+    // Petite vibration sur mobile
+    if(navigator.vibrate) navigator.vibrate(200);
+  }
+}
 
 // ══ RÉTROPLANIFICATION ══
 function openRetroModal(){
