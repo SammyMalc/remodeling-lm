@@ -1727,7 +1727,13 @@ function checkPwd(){
     err.textContent = '';
     document.getElementById('pwd-input').value = '';
     hidePwd();
-    showAuth();
+    // Si prénom déjà connu, charger directement
+    const savedUser = localStorage.getItem(LS_USER);
+    if(savedUser && TEAM.find(m=>m.name===savedUser)){
+      selectUser(savedUser);
+    } else {
+      showAuth();
+    }
   } else {
     err.textContent = '❌ Mot de passe incorrect';
     document.getElementById('pwd-input').value = '';
@@ -2104,14 +2110,8 @@ function hideSplash(){
 window.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{ initDragHandles(); mobileInit(); }, 200);
   window.addEventListener('resize', ()=>{ if(!isMobile()) document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; }); else mobileInit(); });
-  const savedUser=localStorage.getItem(LS_USER);
-  if(savedUser&&TEAM.find(m=>m.name===savedUser)){
-    // Prénom connu → splash 1.5s puis chargement direct
-    setTimeout(()=>{ selectUser(savedUser); }, 3000);
-  } else {
-    // Nouveau navigateur → splash 1.5s puis écran de choix de prénom
-    setTimeout(()=>{ hideSplash(); showAuth(); }, 3000);
-  }
+  // Mot de passe demandé à chaque ouverture
+  setTimeout(()=>{ hideSplash(); showPwd(); }, 3000);
 });
 </script>
 </body>
