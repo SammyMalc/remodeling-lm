@@ -1235,6 +1235,8 @@ function startPolling(){
   clearInterval(pollTimer);
   pollTimer=setInterval(async()=>{
     if(isSaving)return;
+    // Ne pas re-render si l'utilisateur tape dans une note sur mobile
+    if(document.activeElement && document.activeElement.classList.contains('td-notes'))return;
     try{const r=await sheetRead();if(!r||!r.rayons)return;const h=JSON.stringify(r);if(h!==lastHash){lastHash=h;state=r;if(!state.log)state.log=[];state.rayons.forEach(migrate);render();}setSyncStatus('ok');}
     catch(e){setSyncStatus('error');}
   },POLL_MS);
@@ -1338,6 +1340,8 @@ function render(){
 }
 
 function renderDetail(){
+  // Ne pas reconstruire si l'utilisateur est en train de taper dans une note (mobile)
+  if(document.activeElement && document.activeElement.classList.contains('td-notes')) return;
   // Mémoriser les détails actuellement ouverts avant de recréer le HTML
   document.querySelectorAll('.task-detail.open').forEach(el=>{
     openTaskIds.add(el.id.replace('td-',''));
@@ -1529,15 +1533,15 @@ function toggleSubtask(rid,tid,idx){
 function setTaskStatus(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.status=v;t.done=(v==='Fait');save(`Statut "${t.label}" → ${v}`);}
 function setTaskAssign(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.assign=v;save(`Assigné "${t.label}" → ${v||'—'}`);}
 function setUrgent(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.urgent=v;save(`${v?'⚡ Urgent':'Urgence retirée'} : "${t.label}"`);}
+// Debounce timer pour les notes — évite que render() détruise la textarea pendant la frappe mobile
 let _notesTimer=null;
 function setNotes(rid,tid,v){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
   const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
-  t.notes=v;
-  // Debounce : attendre 1,2s après la dernière frappe avant de sauvegarder+re-render
-  // Évite que render() détruise la textarea pendant la saisie sur mobile
+  t.notes=v; // Mettre à jour l'état immédiatement
+  // Ne sauvegarder (et donc ne pas re-render) qu'après 1,5s sans frappe
   clearTimeout(_notesTimer);
-  _notesTimer=setTimeout(()=>{ save(`ℹ Note sur "${t.label}"`); }, 1200);
+  _notesTimer=setTimeout(()=>{ save(`ℹ Note sur "${t.label}"`); }, 1500);
 }
 function addPdf(rid,tid){
   const nameInp=document.getElementById('pdfname-'+tid);
@@ -2118,7 +2122,19 @@ function hideSplash(){
 
 window.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{ initDragHandles(); mobileInit(); }, 200);
-  window.addEventListener('resize', ()=>{ if(!isMobile()) document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; }); else mobileInit(); });
+  // On mémorise la largeur pour détecter un vrai resize (pas l'ouverture du clavier mobile)
+  let _lastWidth = window.innerWidth;
+  window.addEventListener('resize', ()=>{
+    const newWidth = window.innerWidth;
+    if(!isMobile()){
+      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; });
+    } else if(newWidth !== _lastWidth){
+      // Vrai changement de largeur (rotation écran, etc.) → réinitialiser
+      mobileInit();
+    }
+    // Si seule la hauteur a changé (clavier virtuel) → ne rien faire
+    _lastWidth = newWidth;
+  });
   // Mot de passe demandé à chaque ouverture
   setTimeout(()=>{ hideSplash(); showPwd(); }, 3000);
 });
