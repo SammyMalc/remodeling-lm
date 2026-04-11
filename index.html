@@ -418,9 +418,10 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     width:100%!important;max-width:100%!important;
     transform:translateX(105%);
     transition:transform .28s cubic-bezier(.4,0,.2,1);
-    border:none;display:flex!important;
+    border:none;
+    display:none;
   }
-  .col-panel.mobile-active{transform:translateX(0);}
+  .col-panel.mobile-active{transform:translateX(0);display:flex;}
   .col-panel.col-flex{position:absolute;top:0;left:0;right:0;bottom:0;width:100%!important;}
   .drag-handle{display:none;}
 
@@ -2309,23 +2310,18 @@ function isMobile(){ return window.innerWidth <= 600; }
 
 function mobileGoTo(colId, tabId){
   if(!isMobile()) return;
-  // Cacher toutes les colonnes avec display:none pour éviter tout layout flex résiduel
+  // Le CSS gère display via .mobile-active — on manipule uniquement la classe
   document.querySelectorAll('.col-panel').forEach(c=>{
     c.classList.remove('mobile-active');
-    c.style.display = 'none';
+    c.style.display = '';   // laisser le CSS décider (display:none par défaut mobile)
     c.style.transform = '';
-    c.style.visibility = '';
-    c.style.pointerEvents = '';
     c.style.zIndex = '';
   });
-  // Afficher uniquement la colonne cible en plein écran
   const col = document.getElementById(colId);
   if(col){
-    col.classList.add('mobile-active');
-    col.style.display = 'flex';
-    col.style.transform = 'translateX(0)';
+    col.classList.add('mobile-active'); // CSS applique display:flex + transform:translateX(0)
+    col.style.zIndex = '2';
   }
-  // Mettre à jour les onglets
   document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
   const tab = document.getElementById(tabId);
   if(tab) tab.classList.add('active');
@@ -2333,32 +2329,19 @@ function mobileGoTo(colId, tabId){
 }
 
 function mobileEnforce(){
-  // Appelé après chaque render() pour maintenir la colonne active visible
+  // Appelé après chaque render() — réapplique simplement mobileGoTo sur la colonne courante
   if(!isMobile()) return;
   const activeId = mobileCurrentCol || 'col-sidebar';
   const activeTab = {
     'col-sidebar':'tab-rayons','col-detail':'tab-taches',
     'col-retro':'tab-retro','col-mytasks':'tab-moi','col-teamtasks':'tab-equipe','col-logi':'tab-logi'
   }[activeId] || 'tab-rayons';
-  // Cacher toutes les colonnes sauf la colonne active — utiliser display pour être certain
-  document.querySelectorAll('.col-panel').forEach(c=>{
-    const isActive = c.id === activeId;
-    c.classList.toggle('mobile-active', isActive);
-    c.style.transform = isActive ? 'translateX(0)' : 'translateX(105%)';
-    c.style.visibility = isActive ? 'visible' : 'hidden';
-    c.style.pointerEvents = isActive ? '' : 'none';
-    c.style.zIndex = isActive ? '2' : '1';
-  });
-  // Mettre à jour les onglets
-  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
-  const tab = document.getElementById(activeTab);
-  if(tab) tab.classList.add('active');
+  mobileGoTo(activeId, activeTab);
 }
 
 function mobileInit(){
   if(!isMobile()) return;
-  // Cacher toutes les colonnes d'abord
-  document.querySelectorAll('.col-panel').forEach(c=>{ c.style.display='none'; c.classList.remove('mobile-active'); });
+  document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.display=''; c.style.transform=''; });
   mobileGoTo('col-sidebar','tab-rayons');
 }
 
@@ -2425,7 +2408,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('resize', ()=>{
     const newWidth = window.innerWidth;
     if(!isMobile()){
-      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.display=''; c.style.transform=''; c.style.visibility=''; c.style.pointerEvents=''; });
+      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.display=''; c.style.transform=''; });
     } else if(newWidth !== _lastWidth){
       mobileInit();
     }
