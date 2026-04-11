@@ -2296,18 +2296,22 @@ function isMobile(){ return window.innerWidth <= 600; }
 
 function mobileGoTo(colId, tabId){
   if(!isMobile()) return;
-  // Forcer toutes les colonnes hors écran
+  // Cacher toutes les colonnes — on utilise visibility+transform pour éviter les superpositions
   document.querySelectorAll('.col-panel').forEach(c=>{
     c.classList.remove('mobile-active');
     c.style.transform = 'translateX(105%)';
-    c.style.zIndex = '1';
+    c.style.zIndex = '';
+    c.style.visibility = 'hidden';
+    c.style.pointerEvents = 'none';
   });
-  // Activer uniquement la colonne cible
+  // Afficher uniquement la colonne cible
   const col = document.getElementById(colId);
   if(col){
     col.classList.add('mobile-active');
     col.style.transform = 'translateX(0)';
     col.style.zIndex = '2';
+    col.style.visibility = 'visible';
+    col.style.pointerEvents = '';
   }
   // Mettre à jour les onglets
   document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
@@ -2329,6 +2333,11 @@ function mobileEnforce(){
 
 function mobileInit(){
   if(!isMobile()) return;
+  // S'assurer que toutes les colonnes sont cachées avant d'en montrer une
+  document.querySelectorAll('.col-panel').forEach(c=>{
+    c.style.visibility = 'hidden';
+    c.style.pointerEvents = 'none';
+  });
   mobileGoTo('col-sidebar','tab-rayons');
 }
 
@@ -2395,7 +2404,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('resize', ()=>{
     const newWidth = window.innerWidth;
     if(!isMobile()){
-      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; });
+      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; c.style.visibility=''; c.style.pointerEvents=''; });
     } else if(newWidth !== _lastWidth){
       mobileInit();
     }
