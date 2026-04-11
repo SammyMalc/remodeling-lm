@@ -530,6 +530,17 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   .btn-cancel,.btn-confirm{font-size:16px;padding:13px 24px;border-radius:11px;}
   .retro-modal-inp{font-size:16px;padding:13px 16px;}
 
+
+  /* Commandes mobile */
+  .td-cmd-inp{font-size:16px;padding:11px 14px;}
+  .td-cmd-add-btn{font-size:14px;padding:11px 18px;}
+  .td-cmd-inp-date{width:100%;flex-basis:100%;}
+  .td-cmd-add{gap:8px;}
+  /* Logistique mobile */
+  .logi-card{padding:14px 16px;border-radius:14px;}
+  .logi-num{font-size:15px;}
+  .logi-tache{font-size:13px;}
+
   /* Nav mobile visible */
   .mobile-nav{display:flex;}
 
@@ -721,6 +732,52 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 #splash-bar{width:160px;height:4px;background:#dde4e0;border-radius:99px;overflow:hidden;}
 #splash-fill{height:100%;background:#3d9142;border-radius:99px;animation:ldp 1.6s ease-in-out infinite;}
 @keyframes splashPulse{0%,100%{transform:scale(1);box-shadow:0 12px 40px rgba(61,145,66,.25);}50%{transform:scale(1.04);box-shadow:0 16px 48px rgba(61,145,66,.4);}}
+
+/* ══ COMMANDES / LOGISTIQUE ══ */
+.td-cmd-list{display:flex;flex-direction:column;gap:8px;margin-bottom:4px;}
+.td-cmd-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:9px 13px;}
+.td-cmd-num{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);flex:1;}
+.td-cmd-date{font-size:12px;color:var(--text2);font-family:var(--mono);flex-shrink:0;}
+.td-cmd-status{font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border:none;font-family:var(--font);}
+.td-cmd-status.attente{background:#f59e0b22;color:#b45309;}
+.td-cmd-status.recue{background:#22c55e22;color:#15803d;}
+
+.td-cmd-del{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+.td-cmd-add{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px;}
+.td-cmd-inp{background:var(--bg3);border:2px solid var(--border2);color:var(--text);font-size:14px;padding:9px 12px;border-radius:9px;outline:none;font-family:var(--mono);}
+.td-cmd-inp:focus{border-color:var(--green);}
+.td-cmd-inp-num{flex:1;min-width:100px;}
+.td-cmd-inp-date{width:150px;}
+.td-cmd-add-btn{background:var(--green);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;padding:9px 16px;cursor:pointer;font-family:var(--font);white-space:nowrap;}
+
+/* ══ COLONNE LOGISTIQUE ══ */
+.logi-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:0;}
+.logi-week{margin-bottom:18px;}
+.logi-week-hdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:6px 0 10px 2px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.logi-card{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;position:relative;}
+.logi-card.retard{border-left:3px solid #ef4444;}
+.logi-card.auj{border-left:3px solid #f59e0b;}
+.logi-card.avenir{border-left:3px solid #22c55e;}
+.logi-card.recue{border-left:3px solid #64748b;opacity:.65;}
+.logi-num{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--text);}
+.logi-date{font-size:12px;font-family:var(--mono);font-weight:700;}
+.logi-date.retard{color:#ef4444;}
+.logi-date.auj{color:#f59e0b;}
+.logi-date.avenir{color:#22c55e;}
+.logi-date.recue{color:var(--text3);}
+.logi-tache{font-size:12px;color:var(--text2);margin-top:1px;}
+.logi-rayon{font-size:11px;color:var(--text3);}
+.logi-status-btn{position:absolute;top:10px;right:10px;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:var(--font);}
+.logi-status-btn.attente{background:#f59e0b22;color:#b45309;}
+.logi-status-btn.recue{background:#22c55e22;color:#15803d;}
+
+.logi-empty{color:var(--text3);font-size:14px;font-style:italic;text-align:center;padding:30px 16px;}
+.logi-filters{display:flex;gap:6px;padding:10px 16px 4px;flex-wrap:wrap;}
+.logi-filter-btn{font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;}
+.logi-filter-btn.active{background:var(--green);border-color:var(--green);color:#fff;}
+.logi-summary{display:flex;gap:8px;padding:10px 16px 6px;flex-wrap:wrap;}
+.logi-sum-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px;}
+
 </style>
 </head>
 <body>
@@ -883,6 +940,26 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       </div>
     </div>
 
+
+    <div class="drag-handle" data-target="col-logi" data-dir="left"><div class="drag-dots">⋮</div></div>
+
+    <!-- COL 6 : LOGISTIQUE -->
+    <div class="col-panel" id="col-logi" style="width:260px">
+      <div class="col-head">
+        <span class="col-head-lbl">🚚 Logistique</span>
+      </div>
+      <div class="logi-filters" id="logi-filters">
+        <button class="logi-filter-btn active" data-filter="all" onclick="logiSetFilter('all')">Tout</button>
+        <button class="logi-filter-btn" data-filter="retard" onclick="logiSetFilter('retard')">🔴 En retard</button>
+        <button class="logi-filter-btn" data-filter="avenir" onclick="logiSetFilter('avenir')">🟢 À venir</button>
+        <button class="logi-filter-btn" data-filter="recue" onclick="logiSetFilter('recue')">✅ Reçues</button>
+      </div>
+      <div class="logi-summary" id="logi-summary"></div>
+      <div class="logi-body" id="logi-body">
+        <div class="logi-empty">Aucune commande renseignée.</div>
+      </div>
+    </div>
+
   </div>
   <div class="log-bar" id="log-bar"><span style="color:var(--text3)">Aucune activité récente.</span></div>
 
@@ -908,6 +985,11 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     <button class="mobile-tab" id="tab-equipe" onclick="mobileGoTo('col-teamtasks','tab-equipe')">
       <span class="mobile-tab-icon">👥</span>
       <span class="mobile-tab-label">Équipe</span>
+    </button>
+    <button class="mobile-tab" id="tab-logi" onclick="mobileGoTo('col-logi','tab-logi')">
+      <span class="mobile-tab-icon">🚚</span>
+      <span class="mobile-tab-label">Logistique</span>
+      <span class="mobile-tab-badge" id="mobile-badge-logi" style="display:none"></span>
     </button>
   </nav>
 </div>
@@ -1083,6 +1165,8 @@ function migrate(r){
     t.subtasks=t.subtasks.map(s=>typeof s==='string'?{label:s,done:false}:s);
     if(!t.taskType)t.taskType='showroom'; // migration ancienne tâche
     if(!t.pdfs)t.pdfs=[];
+    if(!t.cmds)t.cmds=[];
+    t.cmds.forEach(c=>{ if(c.status&&c.status!=='En attente'&&c.status!=='Reçue') c.status='En attente'; });
   });
 }
 
@@ -1235,7 +1319,6 @@ function startPolling(){
   clearInterval(pollTimer);
   pollTimer=setInterval(async()=>{
     if(isSaving)return;
-    // Ne pas re-render si l'utilisateur tape dans une note sur mobile
     if(document.activeElement && document.activeElement.classList.contains('td-notes'))return;
     try{const r=await sheetRead();if(!r||!r.rayons)return;const h=JSON.stringify(r);if(h!==lastHash){lastHash=h;state=r;if(!state.log)state.log=[];state.rayons.forEach(migrate);render();}setSyncStatus('ok');}
     catch(e){setSyncStatus('error');}
@@ -1332,6 +1415,8 @@ function render(){
   renderMyTasks();
   // Tâches équipe
   renderTeamTasks();
+  // Logistique
+  renderLogistique();
 
   // Log
   const lb=document.getElementById('log-bar');
@@ -1340,7 +1425,6 @@ function render(){
 }
 
 function renderDetail(){
-  // Ne pas reconstruire si l'utilisateur est en train de taper dans une note (mobile)
   if(document.activeElement && document.activeElement.classList.contains('td-notes')) return;
   // Mémoriser les détails actuellement ouverts avant de recréer le HTML
   document.querySelectorAll('.task-detail.open').forEach(el=>{
@@ -1424,6 +1508,22 @@ function renderDetail(){
             <input class="td-pdf-name-inp" type="text" id="pdfname-${t.id}" placeholder="Nom du document"/>
             <input class="td-pdf-url" type="text" id="pdfurl-${t.id}" placeholder="Lien Google Drive…" onkeydown="if(event.key==='Enter')addPdf('${r.id}','${t.id}')"/>
             <button class="td-pdf-add-btn" onclick="addPdf('${r.id}','${t.id}')">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="td-row" style="flex-direction:column;gap:6px;width:100%">
+          <span class="td-lbl" style="padding-top:0">🚚 Commandes <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(n° et date d'arrivage)</span></span>
+          <div class="td-cmd-list" id="cmdl-${t.id}">${(t.cmds||[]).length===0?'<span style="font-size:13px;color:var(--text3);font-style:italic">Aucune commande</span>':(t.cmds||[]).map((c,i)=>`
+            <div class="td-cmd-item">
+              <span class="td-cmd-num">${esc(c.num)}</span>
+              <span class="td-cmd-date">${c.date?formatCmdDate(c.date):'-'}</span>
+              <button class="td-cmd-status ${cmdStatusClass(c.status)}" onclick="cycleCmdStatus('${r.id}','${t.id}',${i})">${c.status||'En attente'}</button>
+              <button class="td-cmd-del" onclick="delCmd('${r.id}','${t.id}',${i})">×</button>
+            </div>`).join('')}
+          </div>
+          <div class="td-cmd-add">
+            <input class="td-cmd-inp td-cmd-inp-num" type="text" id="cmdnum-${t.id}" placeholder="N° commande…"/>
+            <input class="td-cmd-inp td-cmd-inp-date" type="date" id="cmddate-${t.id}"/>
+            <button class="td-cmd-add-btn" onclick="addCmd('${r.id}','${t.id}')">+ Ajouter</button>
           </div>
         </div>
       </div>
@@ -1533,15 +1633,184 @@ function toggleSubtask(rid,tid,idx){
 function setTaskStatus(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.status=v;t.done=(v==='Fait');save(`Statut "${t.label}" → ${v}`);}
 function setTaskAssign(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.assign=v;save(`Assigné "${t.label}" → ${v||'—'}`);}
 function setUrgent(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.urgent=v;save(`${v?'⚡ Urgent':'Urgence retirée'} : "${t.label}"`);}
-// Debounce timer pour les notes — évite que render() détruise la textarea pendant la frappe mobile
+
+// ══ COMMANDES ══
+const CMD_STATUSES = ['En attente','Reçue'];
+let _logiFilter = 'all';
+
+function cmdStatusClass(s){
+  if(s==='Reçue') return 'recue';
+  return 'attente';
+}
+
+function formatCmdDate(d){
+  if(!d) return '-';
+  const parts = d.split('-');
+  if(parts.length!==3) return d;
+  return parts[2]+'/'+parts[1]+'/'+parts[0];
+}
+
+function addCmd(rid,tid){
+  const numInp = document.getElementById('cmdnum-'+tid);
+  const dateInp = document.getElementById('cmddate-'+tid);
+  if(!numInp) return;
+  const num = numInp.value.trim();
+  if(!num){alert('Saisissez un numéro de commande.');return;}
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  if(!t.cmds)t.cmds=[];
+  t.cmds.push({num, date: dateInp?dateInp.value:'', status:'En attente'});
+  numInp.value=''; if(dateInp)dateInp.value='';
+  save('🚚 Commande "'+num+'" ajoutée à "'+t.label+'"');
+}
+
+function delCmd(rid,tid,idx){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t||!t.cmds)return;
+  const num=t.cmds[idx]?t.cmds[idx].num:'';
+  t.cmds.splice(idx,1);
+  save('🗑 Commande "'+num+'" supprimée');
+}
+
+function cycleCmdStatus(rid,tid,idx){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t||!t.cmds)return;
+  const c=t.cmds[idx];if(!c)return;
+  const cur=CMD_STATUSES.indexOf(c.status||'En attente');
+  c.status=CMD_STATUSES[(cur+1)%CMD_STATUSES.length];
+  save('🚚 Statut commande "'+c.num+'" → '+c.status);
+}
+
+function logiSetFilter(f){
+  _logiFilter=f;
+  document.querySelectorAll('.logi-filter-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.filter===f);
+  });
+  renderLogistique();
+}
+
+function renderLogistique(){
+  const body = document.getElementById('logi-body');
+  const summary = document.getElementById('logi-summary');
+  if(!body) return;
+
+  // Collecter toutes les commandes
+  const all = [];
+  (state.rayons||[]).forEach(r=>{
+    (r.tasks||[]).forEach(t=>{
+      (t.cmds||[]).forEach((c,i)=>{
+        all.push({cmd:c, idx:i, task:t, rayon:r});
+      });
+    });
+  });
+
+  // Stats
+  const today = new Date(); today.setHours(0,0,0,0);
+  let nRetard=0,nAuj=0,nAvenir=0,nRecue=0;
+  all.forEach(({cmd})=>{
+    if(cmd.status==='Reçue'){nRecue++;return;}
+    if(!cmd.date){nAvenir++;return;}
+    const d=new Date(cmd.date);d.setHours(0,0,0,0);
+    if(d<today) nRetard++;
+    else if(d.getTime()===today.getTime()) nAuj++;
+    else nAvenir++;
+  });
+
+  if(summary){
+    summary.innerHTML=[
+      nRetard?'<div class="logi-sum-pill" style="background:#ef444418;color:#b91c1c">🔴 '+nRetard+' en retard</div>':'',
+      nAuj?'<div class="logi-sum-pill" style="background:#f59e0b18;color:#92400e">🟡 '+nAuj+' aujourd\'hui</div>':'',
+      nAvenir?'<div class="logi-sum-pill" style="background:#22c55e18;color:#166534">🟢 '+nAvenir+' à venir</div>':'',
+      nRecue?'<div class="logi-sum-pill" style="background:#64748b18;color:#475569">✅ '+nRecue+' reçue(s)</div>':'',
+    ].join('');
+  }
+
+  // Badge mobile
+  const badge=document.getElementById('mobile-badge-logi');
+  if(badge){if(nRetard>0){badge.textContent=nRetard;badge.style.display='flex';}else badge.style.display='none';}
+
+  // Filtre
+  let filtered = all.filter(({cmd})=>{
+    if(_logiFilter==='all') return true;
+    if(_logiFilter==='recue') return cmd.status==='Reçue';
+    if(_logiFilter==='retard'){
+      if(cmd.status==='Reçue') return false;
+      if(!cmd.date) return false;
+      const d=new Date(cmd.date);d.setHours(0,0,0,0);return d<today;
+    }
+    if(_logiFilter==='avenir'){
+      if(cmd.status==='Reçue') return false;
+      if(!cmd.date) return true;
+      const d=new Date(cmd.date);d.setHours(0,0,0,0);return d>=today;
+    }
+    return true;
+  });
+
+  if(!filtered.length){body.innerHTML='<div class="logi-empty">Aucune commande correspondante.</div>';return;}
+
+  // Trier par date
+  filtered.sort((a,b)=>{
+    const da=a.cmd.date?new Date(a.cmd.date):new Date('9999-12-31');
+    const db=b.cmd.date?new Date(b.cmd.date):new Date('9999-12-31');
+    return da-db;
+  });
+
+  // Grouper par semaine
+  function weekLabel(dateStr){
+    if(!dateStr) return 'Date non définie';
+    const d=new Date(dateStr);d.setHours(0,0,0,0);
+    const today2=new Date();today2.setHours(0,0,0,0);
+    const diff=Math.round((d-today2)/(1000*60*60*24));
+    if(diff<0) return '🔴 En retard';
+    if(diff===0) return '🟡 Aujourd\'hui';
+    if(diff<=6) return '🟢 Cette semaine';
+    if(diff<=13) return '📦 Semaine prochaine';
+    // Sinon semaine ISO
+    const mon=new Date(d);mon.setDate(d.getDate()-d.getDay()+1);
+    return '📅 Sem. du '+mon.getDate()+'/'+(mon.getMonth()+1);
+  }
+
+  function cardClass(cmd){
+    if(cmd.status==='Reçue') return 'recue';
+    if(!cmd.date) return 'avenir';
+    const d=new Date(cmd.date);d.setHours(0,0,0,0);
+    if(d<today) return 'retard';
+    if(d.getTime()===today.getTime()) return 'auj';
+    return 'avenir';
+  }
+  function dateClass(cmd){return cardClass(cmd);}
+
+  // Grouper
+  const groups={};
+  filtered.forEach(item=>{
+    const k=weekLabel(item.cmd.date);
+    if(!groups[k])groups[k]=[];
+    groups[k].push(item);
+  });
+
+  body.innerHTML=Object.entries(groups).map(([week,items])=>`
+    <div class="logi-week">
+      <div class="logi-week-hdr">${week}</div>
+      ${items.map(({cmd,idx,task,rayon})=>`
+        <div class="logi-card ${cardClass(cmd)}">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-right:90px">
+            <span class="logi-num">📦 ${esc(cmd.num)}</span>
+            <span class="logi-date ${dateClass(cmd)}">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
+          </div>
+          <div class="logi-tache">📋 ${esc(task.label)}</div>
+          <div class="logi-rayon">📍 ${esc(rayon.name)}</div>
+          <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
 let _notesTimer=null;
 function setNotes(rid,tid,v){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
   const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
-  t.notes=v; // Mettre à jour l'état immédiatement
-  // Ne sauvegarder (et donc ne pas re-render) qu'après 1,5s sans frappe
+  t.notes=v;
   clearTimeout(_notesTimer);
-  _notesTimer=setTimeout(()=>{ save(`ℹ Note sur "${t.label}"`); }, 1500);
+  _notesTimer=setTimeout(()=>{ save('ℹ Note sur "'+t.label+'"'); }, 1500);
 }
 function addPdf(rid,tid){
   const nameInp=document.getElementById('pdfname-'+tid);
@@ -2053,7 +2322,7 @@ function mobileEnforce(){
   const activeId = mobileCurrentCol || 'col-sidebar';
   const activeTab = {
     'col-sidebar':'tab-rayons','col-detail':'tab-taches',
-    'col-retro':'tab-retro','col-mytasks':'tab-moi','col-teamtasks':'tab-equipe'
+    'col-retro':'tab-retro','col-mytasks':'tab-moi','col-teamtasks':'tab-equipe','col-logi':'tab-logi'
   }[activeId] || 'tab-rayons';
   mobileGoTo(activeId, activeTab);
 }
@@ -2122,17 +2391,14 @@ function hideSplash(){
 
 window.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{ initDragHandles(); mobileInit(); }, 200);
-  // On mémorise la largeur pour détecter un vrai resize (pas l'ouverture du clavier mobile)
   let _lastWidth = window.innerWidth;
   window.addEventListener('resize', ()=>{
     const newWidth = window.innerWidth;
     if(!isMobile()){
       document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; });
     } else if(newWidth !== _lastWidth){
-      // Vrai changement de largeur (rotation écran, etc.) → réinitialiser
       mobileInit();
     }
-    // Si seule la hauteur a changé (clavier virtuel) → ne rien faire
     _lastWidth = newWidth;
   });
   // Mot de passe demandé à chaque ouverture
