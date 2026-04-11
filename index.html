@@ -1396,7 +1396,7 @@ function renderDetail(){
         </div>
         <div class="td-row" style="flex-direction:column;gap:5px;width:100%">
           <span class="td-lbl" style="padding-top:0">Notes</span>
-          <textarea class="td-notes" placeholder="Notes techniques…" onchange="setNotes('${r.id}','${t.id}',this.value)">${esc(t.notes||'')}</textarea>
+          <textarea class="td-notes" placeholder="Notes techniques…" oninput="setNotes('${r.id}','${t.id}',this.value)">${esc(t.notes||'')}</textarea>
         </div>
         <div class="td-row" style="flex-direction:column;gap:6px;width:100%">
           <span class="td-lbl" style="padding-top:0">Sous-tâches <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(toutes requises pour terminer)</span></span>
