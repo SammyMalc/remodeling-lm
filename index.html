@@ -1529,7 +1529,16 @@ function toggleSubtask(rid,tid,idx){
 function setTaskStatus(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.status=v;t.done=(v==='Fait');save(`Statut "${t.label}" → ${v}`);}
 function setTaskAssign(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.assign=v;save(`Assigné "${t.label}" → ${v||'—'}`);}
 function setUrgent(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.urgent=v;save(`${v?'⚡ Urgent':'Urgence retirée'} : "${t.label}"`);}
-function setNotes(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.notes=v;save(`ℹ Note sur "${t.label}"`);}
+let _notesTimer=null;
+function setNotes(rid,tid,v){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.notes=v;
+  // Debounce : attendre 1,2s après la dernière frappe avant de sauvegarder+re-render
+  // Évite que render() détruise la textarea pendant la saisie sur mobile
+  clearTimeout(_notesTimer);
+  _notesTimer=setTimeout(()=>{ save(`ℹ Note sur "${t.label}"`); }, 1200);
+}
 function addPdf(rid,tid){
   const nameInp=document.getElementById('pdfname-'+tid);
   const urlInp=document.getElementById('pdfurl-'+tid);
