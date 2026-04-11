@@ -2174,25 +2174,38 @@ function renderMyTasks(){
 
 function goToTask(rayonId, taskId){
   selectedId=rayonId;
-  // Sur mobile : aller sur l'onglet Tâches AVANT le render
-  // pour que mobileEnforce() ne remette pas la colonne précédente
   if(isMobile()){
+    // Sur mobile : naviguer vers col-detail EN PREMIER, avant tout render
     mobileCurrentCol='col-detail';
     mobileGoTo('col-detail','tab-taches');
+    // Puis faire un render léger : juste renderDetail() sans mobileEnforce()
+    openTaskIds.add(taskId);
+    renderDetail();
+    // Scroll vers la tâche
+    setTimeout(()=>{
+      const el=document.getElementById('td-'+taskId);
+      if(el){
+        el.classList.add('open');
+        openTaskIds.add(taskId);
+        const card=el.closest('.task-card');
+        if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+      // Garantir que col-detail reste visible après tout rendu éventuel
+      mobileGoTo('col-detail','tab-taches');
+    }, 150);
+  } else {
+    // Desktop : render complet normal
+    render();
+    setTimeout(()=>{
+      const el=document.getElementById('td-'+taskId);
+      if(el){
+        el.classList.add('open');
+        openTaskIds.add(taskId);
+        const card=el.closest('.task-card');
+        if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }, 100);
   }
-  render();
-  // Ouvrir le détail de la tâche après le rendu
-  setTimeout(()=>{
-    const el=document.getElementById('td-'+taskId);
-    if(el){
-      el.classList.add('open');
-      openTaskIds.add(taskId);
-      const card=el.closest('.task-card');
-      if(card)card.scrollIntoView({behavior:'smooth', block:'center'});
-    }
-    // Re-forcer l'onglet Tâches après mobileEnforce()
-    if(isMobile()) mobileGoTo('col-detail','tab-taches');
-  }, 120);
 }
 
 // ══ TÂCHES ÉQUIPE ══
@@ -2296,22 +2309,21 @@ function isMobile(){ return window.innerWidth <= 600; }
 
 function mobileGoTo(colId, tabId){
   if(!isMobile()) return;
-  // Cacher toutes les colonnes — on utilise visibility+transform pour éviter les superpositions
+  // Cacher toutes les colonnes avec display:none pour éviter tout layout flex résiduel
   document.querySelectorAll('.col-panel').forEach(c=>{
     c.classList.remove('mobile-active');
-    c.style.transform = 'translateX(105%)';
+    c.style.display = 'none';
+    c.style.transform = '';
+    c.style.visibility = '';
+    c.style.pointerEvents = '';
     c.style.zIndex = '';
-    c.style.visibility = 'hidden';
-    c.style.pointerEvents = 'none';
   });
-  // Afficher uniquement la colonne cible
+  // Afficher uniquement la colonne cible en plein écran
   const col = document.getElementById(colId);
   if(col){
     col.classList.add('mobile-active');
+    col.style.display = 'flex';
     col.style.transform = 'translateX(0)';
-    col.style.zIndex = '2';
-    col.style.visibility = 'visible';
-    col.style.pointerEvents = '';
   }
   // Mettre à jour les onglets
   document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
@@ -2321,23 +2333,32 @@ function mobileGoTo(colId, tabId){
 }
 
 function mobileEnforce(){
-  // Appelé après chaque render() pour éviter les colonnes "bloquées"
+  // Appelé après chaque render() pour maintenir la colonne active visible
   if(!isMobile()) return;
   const activeId = mobileCurrentCol || 'col-sidebar';
   const activeTab = {
     'col-sidebar':'tab-rayons','col-detail':'tab-taches',
     'col-retro':'tab-retro','col-mytasks':'tab-moi','col-teamtasks':'tab-equipe','col-logi':'tab-logi'
   }[activeId] || 'tab-rayons';
-  mobileGoTo(activeId, activeTab);
+  // Cacher toutes les colonnes sauf la colonne active — utiliser display pour être certain
+  document.querySelectorAll('.col-panel').forEach(c=>{
+    const isActive = c.id === activeId;
+    c.classList.toggle('mobile-active', isActive);
+    c.style.transform = isActive ? 'translateX(0)' : 'translateX(105%)';
+    c.style.visibility = isActive ? 'visible' : 'hidden';
+    c.style.pointerEvents = isActive ? '' : 'none';
+    c.style.zIndex = isActive ? '2' : '1';
+  });
+  // Mettre à jour les onglets
+  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
+  const tab = document.getElementById(activeTab);
+  if(tab) tab.classList.add('active');
 }
 
 function mobileInit(){
   if(!isMobile()) return;
-  // S'assurer que toutes les colonnes sont cachées avant d'en montrer une
-  document.querySelectorAll('.col-panel').forEach(c=>{
-    c.style.visibility = 'hidden';
-    c.style.pointerEvents = 'none';
-  });
+  // Cacher toutes les colonnes d'abord
+  document.querySelectorAll('.col-panel').forEach(c=>{ c.style.display='none'; c.classList.remove('mobile-active'); });
   mobileGoTo('col-sidebar','tab-rayons');
 }
 
@@ -2404,7 +2425,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('resize', ()=>{
     const newWidth = window.innerWidth;
     if(!isMobile()){
-      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.transform=''; c.style.visibility=''; c.style.pointerEvents=''; });
+      document.querySelectorAll('.col-panel').forEach(c=>{ c.classList.remove('mobile-active'); c.style.display=''; c.style.transform=''; c.style.visibility=''; c.style.pointerEvents=''; });
     } else if(newWidth !== _lastWidth){
       mobileInit();
     }
