@@ -1109,6 +1109,7 @@ const TEAM = [
   {name:'Sammy',  color:'#c97c10'},
   {name:'Laura',  color:'#c2276b'},
   {name:'Hugo',   color:'#0f766e'},
+  {name:'LOG SRM', color:'#f59e0b', role:'logistique'},
 ];
 
 const C_COLORS = ['#3d9142','#2d8a5e','#4a7e3e','#2e8a72','#5aab5e'];
@@ -1253,9 +1254,19 @@ function reconfigure(){localStorage.removeItem(LS_SHEET);clearInterval(pollTimer
 // ══ AUTH ══
 function showAuth(){
   document.getElementById('auth-overlay').classList.add('show');
-  document.getElementById('auth-grid').innerHTML=TEAM.map(m=>`
+  const commerce = TEAM.filter(m=>!m.role);
+  const logistique = TEAM.filter(m=>m.role==='logistique');
+  document.getElementById('auth-grid').innerHTML=
+    '<div style="grid-column:1/-1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding-bottom:4px">Commerce</div>'
+    + commerce.map(m=>`
     <button class="auth-btn" onclick="selectUser('${m.name}')">
       <div class="auth-av" style="background:${m.color}">${m.name.slice(0,2).toUpperCase()}</div>
+      ${esc(m.name)}
+    </button>`).join('')
+    + '<div style="grid-column:1/-1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:12px 0 4px">Logistique</div>'
+    + logistique.map(m=>`
+    <button class="auth-btn" style="grid-column:1/-1;border-color:#f59e0b22;background:#fffbeb" onclick="selectUser('${m.name}')">
+      <div class="auth-av" style="background:${m.color}">🚚</div>
       ${esc(m.name)}
     </button>`).join('');
 }
