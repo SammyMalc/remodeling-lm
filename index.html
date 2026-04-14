@@ -1181,7 +1181,7 @@ function barColor(p, u, col){
 function teamColor(n){return(TEAM.find(m=>m.name===n)||{color:'#8fa89a'}).color;}
 function rayonsOf(u){return(state.rayons||[]).filter(r=>r.universe===u);}
 function univPct(u){const rs=rayonsOf(u);if(!rs.length)return 0;const t=rs.reduce((s,r)=>s+r.tasks.length,0);if(!t)return 0;return Math.round(rs.reduce((s,r)=>s+r.tasks.filter(t=>t.done).length,0)/t*100);}
-function statusBadge(r){const p=pct(r);if(p===100)return'<span class="rc-badge done">✓ Déployé</span>';if(r.status==='live')return'<span class="rc-badge live">● Live</span>';return'<span class="rc-badge soon">Bientôt</span>';}
+function statusBadge(r){const p=pct(r);if(p===100)return'<span class="rc-badge done">✓ Prêt à implanter</span>';if(r.status==='live')return'<span class="rc-badge live">● Live</span>';return'<span class="rc-badge soon">Bientôt</span>';}
 function makeTask(label, taskType){
   taskType = taskType || 'showroom';
   const template = taskType === 'fond_rayon' ? SUBTASKS_FOND_RAYON : SUBTASKS_SHOWROOM;
@@ -1386,13 +1386,13 @@ function render(){
   const gc=barColor(gp,'');
 
   // Hero
-  document.getElementById('hero-fill').style.cssText=`width:${gp}%;background:${gc}`;
+  document.getElementById('hero-fill').style.cssText=`width:${gp}%;background:${gp>=100?'#2d9e4f':gp>=50?'#3d9142':'#4aab57'}`;
   document.getElementById('hero-pct').textContent=gp+'%';
   document.getElementById('hero-pct').style.color=gc;
   document.getElementById('hero-stats').innerHTML=`
     <div class="hero-stat"><div class="hero-stat-num">${total}</div><div class="hero-stat-label">Rayons</div></div>
     <div class="hero-stat"><div class="hero-stat-num">${doneT}/${totalT}</div><div class="hero-stat-label">Tâches</div></div>
-    <div class="hero-stat"><div class="hero-stat-num">${deployed}</div><div class="hero-stat-label">Déployés</div></div>`;
+    <div class="hero-stat"><div class="hero-stat-num">${deployed}</div><div class="hero-stat-label">Prêts à implanter</div></div>`;
 
   const cp=univPct('CUISINE'),rp=univPct('RANGEMENT');
   const cn=rayonsOf('CUISINE').length,rn=rayonsOf('RANGEMENT').length;
@@ -2250,7 +2250,7 @@ function renderMyTasks(){
   const myTasks=[];
   (state.rayons||[]).forEach(r=>{
     (r.tasks||[]).forEach(t=>{
-      if(t.assign===currentUser){
+      if(t.assign===currentUser && !t.done){
         myTasks.push({task:t, rayon:r});
       }
     });
@@ -2347,7 +2347,7 @@ function renderTeamTasks(){
 
   (state.rayons||[]).forEach(r=>{
     (r.tasks||[]).forEach(t=>{
-      if(t.assign && byMember[t.assign]!==undefined){
+      if(t.assign && byMember[t.assign]!==undefined && !t.done){
         byMember[t.assign].push({task:t, rayon:r});
       }
     });
