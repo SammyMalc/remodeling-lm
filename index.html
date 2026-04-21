@@ -402,24 +402,27 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   .user-chip-name{font-size:13px;}
   .user-chip-av{width:28px;height:28px;}
 
-  /* ── Hero compact mais lisible ── */
-  .hero{padding:0 16px 12px;}
-  .hero-logo-bar{margin:0 -16px 12px;padding:10px 16px;}
-  .hero-logo-img{height:52px;width:52px;border-radius:10px;}
-  .hero-logo-title{font-size:15px;}
-  .hero-logo-sub{font-size:10px;}
-  .hero-top{margin-bottom:8px;}
-  .hero-left .hero-title{font-size:20px;font-weight:700;}
-  .hero-left .hero-tag{display:none;}
-  .hero-right{display:none;}
-  .hero-gauge-row{gap:10px;margin-bottom:8px;}
-  .hero-gauge-lbl{font-size:13px;}
-  .hero-gauge-pct{font-size:24px;min-width:54px;}
-  .hero-gauge-track{height:16px;}
-  .hero-univs{gap:8px;}
-  .univ-pill{padding:6px 12px;font-size:12px;gap:6px;}
-  .up-bar{min-width:50px;}
-  .up-pct{font-size:12px;}
+  /* ── Hero compact mobile : 2 lignes ── */
+  .hero-compact{
+    height:auto !important;
+    min-height:0 !important;
+    flex-shrink:0 !important;
+    flex-wrap:wrap;
+    padding:8px 14px 10px;
+    gap:6px;row-gap:5px;
+    align-items:center;
+    overflow:visible !important;
+  }
+  .hero-compact-logo .hero-compact-sub{display:none;}
+  .hero-compact-divider{display:none;}
+  .hero-compact-stats{display:none;}
+  .hero-compact-univs{display:none;}
+  .hero-compact-plans{font-size:12px;padding:5px 11px;margin-left:auto;flex-shrink:0;}
+  /* Ligne 2 : jauge pleine largeur */
+  .hero-compact-gauge{order:10;flex-basis:100%;width:100%;display:flex !important;align-items:center;gap:8px;}
+  .hero-compact-gauge-lbl{display:none;}
+  .hero-compact-track{flex:1;height:10px;}
+  .hero-compact-pct{font-size:15px;font-weight:900;min-width:34px;text-align:right;}
 
   /* ── Log bar masquée ── */
   .log-bar{display:none;}
@@ -437,6 +440,26 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   }
   .col-panel.mobile-active{transform:translateX(0);display:flex;}
   .col-panel.col-flex{position:absolute;top:0;left:0;right:0;bottom:0;width:100%!important;}
+  /* Collapse desktop totalement désactivé sur mobile */
+  .col-collapse-btn{display:none!important;}
+  .col-collapsed-icon{display:none!important;}
+  .col-panel.collapsed{
+    width:100%!important;min-width:unset!important;
+    position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+  }
+  .col-panel.collapsed .col-body,
+  .col-panel.collapsed .sidebar-list,
+  .col-panel.collapsed .retro-body,
+  .col-panel.collapsed .logi-body,
+  .col-panel.collapsed .logi-filters,
+  .col-panel.collapsed .logi-summary,
+  .col-panel.collapsed .logi-rdv-section,
+  .col-panel.collapsed .col-head-lbl,
+  .col-panel.collapsed .add-btn,
+  .col-panel.collapsed .retro-add-btn,
+  .col-panel.collapsed .mytasks-head-count,
+  .col-panel.collapsed > .detail{display:revert!important;}
+  .col-panel.collapsed .col-head{flex-direction:row!important;justify-content:space-between!important;align-items:center!important;padding:14px 18px!important;height:auto!important;}
   .drag-handle{display:none;}
 
   /* ── Éléments tactiles agrandis ── */
@@ -950,6 +973,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
   <!-- HERO COMPACT -->
   <div class="hero-compact" id="hero-compact">
+    <!-- Ligne 1 : logo | stats | univs | plans -->
     <div class="hero-compact-logo">
       <div style="width:30px;height:30px;border-radius:6px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;">LM</div>
       <div>
@@ -958,17 +982,17 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       </div>
     </div>
     <div class="hero-compact-divider"></div>
-    <div class="hero-compact-gauge">
-      <span class="hero-compact-gauge-lbl">Global</span>
-      <div class="hero-compact-track"><div class="hero-compact-fill" id="hero-fill" style="width:0%"></div></div>
-      <span class="hero-compact-pct" id="hero-pct">0%</span>
-    </div>
-    <div class="hero-compact-divider"></div>
     <div class="hero-compact-stats" id="hero-stats"></div>
     <div class="hero-compact-divider"></div>
     <div class="hero-compact-univs" id="hero-univs"></div>
     <div class="hero-compact-divider"></div>
     <button class="hero-compact-plans" onclick="openPlans()">🗺️ Plans</button>
+    <!-- Ligne 2 : jauge + % (pleine largeur sur mobile) -->
+    <div class="hero-compact-gauge">
+      <span class="hero-compact-gauge-lbl">Global</span>
+      <div class="hero-compact-track"><div class="hero-compact-fill" id="hero-fill" style="width:0%"></div></div>
+      <span class="hero-compact-pct" id="hero-pct">0%</span>
+    </div>
   </div>
 
   <div class="main">
