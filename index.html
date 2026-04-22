@@ -882,12 +882,12 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .col-panel.collapsed .retro-add-btn,
 .col-panel.collapsed .mytasks-head-count,
 .col-panel.collapsed > .detail{display:none!important;}
-.col-panel.collapsed .col-head{flex-direction:column;justify-content:flex-start;align-items:center;padding:8px 0;gap:6px;height:100%;overflow:hidden;}
+.col-panel.collapsed .col-head{flex-direction:column;justify-content:flex-start;align-items:center;padding:6px 0 0;gap:4px;height:100%;overflow:hidden;width:38px;}
 .col-collapse-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px;line-height:1;flex-shrink:0;border-radius:4px;transition:color .15s;}
 .col-collapse-btn:hover{color:var(--text);}
 .col-panel.collapsed .col-collapse-btn{transform:rotate(180deg);}
-.col-collapsed-icon{display:none;flex-direction:column;align-items:center;gap:8px;padding:8px 0;flex:1;overflow:hidden;}
-.col-collapsed-icon .col-ci-emoji{font-size:20px;line-height:1;}
+.col-collapsed-icon{display:none;flex-direction:column;align-items:center;gap:6px;padding:6px 0;flex:1;overflow:hidden;width:38px;}
+.col-collapsed-icon .col-ci-emoji{font-size:18px;line-height:1;}
 .col-collapsed-icon .col-ci-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);white-space:nowrap;}
 .col-panel.collapsed .col-collapsed-icon{display:flex;}
 
@@ -1003,8 +1003,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <button class="col-collapse-btn" onclick="toggleCollapse('col-sidebar')" title="Réduire">◀</button>
         <span class="col-head-lbl">📋 Sous-rayons</span>
         <button class="add-btn" onclick="openAddModal()">+ Nouveau</button>
+        <div class="col-collapsed-icon"><span class="col-ci-emoji">📋</span><span class="col-ci-label">Rayons</span></div>
       </div>
-      <div class="col-collapsed-icon"><span class="col-ci-emoji">📋</span><span class="col-ci-label">Rayons</span></div>
       <div class="sidebar-list" id="sidebar-list"></div>
     </div>
 
@@ -1025,8 +1025,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <button class="col-collapse-btn" onclick="toggleCollapse('col-retro')" title="Réduire">▶</button>
         <span class="col-head-lbl">📅 Rétroplanning</span>
         <button class="retro-add-btn" onclick="openRetroModal()">+ Date</button>
+        <div class="col-collapsed-icon"><span class="col-ci-emoji">📅</span><span class="col-ci-label">Planning</span></div>
       </div>
-      <div class="col-collapsed-icon"><span class="col-ci-emoji">📅</span><span class="col-ci-label">Planning</span></div>
       <div class="retro-body" id="retro-body">
         <div class="retro-empty">Aucune date clé.<br>Ajoutez vos jalons.</div>
       </div>
@@ -1040,8 +1040,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <button class="col-collapse-btn" onclick="toggleCollapse('col-mytasks')" title="Réduire">▶</button>
         <span class="col-head-lbl">👤 Mes tâches</span>
         <span class="mytasks-head-count" id="mytasks-count">0</span>
+        <div class="col-collapsed-icon"><span class="col-ci-emoji">👤</span><span class="col-ci-label">Mes tâches</span></div>
       </div>
-      <div class="col-collapsed-icon"><span class="col-ci-emoji">👤</span><span class="col-ci-label">Mes tâches</span></div>
       <div class="col-body" id="mytasks-body">
         <div class="mytask-empty">Connectez-vous pour voir vos tâches.</div>
       </div>
@@ -1054,8 +1054,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       <div class="col-head">
         <button class="col-collapse-btn" onclick="toggleCollapse('col-teamtasks')" title="Réduire">▶</button>
         <span class="col-head-lbl">👥 Équipe</span>
+        <div class="col-collapsed-icon"><span class="col-ci-emoji">👥</span><span class="col-ci-label">Équipe</span></div>
       </div>
-      <div class="col-collapsed-icon"><span class="col-ci-emoji">👥</span><span class="col-ci-label">Équipe</span></div>
       <div class="col-body" id="teamtasks-body">
         <div class="teamtasks-empty">Aucune tâche assignée.</div>
       </div>
@@ -1069,8 +1069,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       <div class="col-head">
         <button class="col-collapse-btn" onclick="toggleCollapse('col-logi')" title="Réduire">▶</button>
         <span class="col-head-lbl">🚚 Logistique</span>
+        <div class="col-collapsed-icon"><span class="col-ci-emoji">🚚</span><span class="col-ci-label">Logistique</span></div>
       </div>
-      <div class="col-collapsed-icon"><span class="col-ci-emoji">🚚</span><span class="col-ci-label">Logistique</span></div>
       <div class="logi-filters" id="logi-filters">
         <button class="logi-filter-btn active" data-filter="all" onclick="logiSetFilter('all')">Tout</button>
         <button class="logi-filter-btn" data-filter="retard" onclick="logiSetFilter('retard')">🔴 En retard</button>
