@@ -569,12 +569,6 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   .retro-modal-inp{font-size:16px;padding:13px 16px;}
 
 
-  /* PDF items mobile — 2 lignes si nom trop long */
-  .td-pdf-item{flex-wrap:wrap;gap:6px;}
-  .td-pdf-name{flex-basis:100%;width:100%;white-space:normal;word-break:break-word;font-size:13px;}
-  .td-pdf-open{font-size:13px;padding:6px 16px;}
-  .td-pdf-del{padding:6px 8px;}
-
   /* Commandes mobile */
   .td-cmd-inp{font-size:16px;padding:11px 14px;}
   .td-cmd-add-btn{font-size:14px;padding:11px 18px;}
@@ -675,10 +669,12 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 /* PDF dans tâche */
 .td-pdf-row{display:flex;flex-direction:column;gap:6px;width:100%;}
 .td-pdf-list{display:flex;flex-direction:column;gap:5px;}
-.td-pdf-item{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;}
+.td-pdf-item{display:flex;flex-direction:column;gap:6px;padding:8px 11px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;}
+.td-pdf-top{display:flex;align-items:center;gap:8px;min-width:0;}
 .td-pdf-icon{font-size:18px;flex-shrink:0;}
-.td-pdf-name{flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.td-pdf-open{font-size:12px;font-weight:700;color:var(--cuisine-dark);background:var(--green-bg);border:1px solid var(--green-border);padding:3px 10px;border-radius:6px;cursor:pointer;text-decoration:none;flex-shrink:0;}
+.td-pdf-name{flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.td-pdf-actions{display:flex;align-items:center;gap:8px;}
+.td-pdf-open{font-size:12px;font-weight:700;color:var(--cuisine-dark);background:var(--green-bg);border:1px solid var(--green-border);padding:5px 14px;border-radius:6px;cursor:pointer;text-decoration:none;flex-shrink:0;}
 .td-pdf-open:hover{background:var(--green);color:#fff;}
 .td-pdf-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 5px;flex-shrink:0;}
 .td-pdf-del:hover{color:var(--red);}
@@ -1634,10 +1630,14 @@ function renderDetail(){
           <span class="td-lbl" style="padding-top:0">📄 Documents <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(liens Google Drive)</span></span>
           <div class="td-pdf-list" id="pdfl-${t.id}">${(t.pdfs||[]).map((p,i)=>`
             <div class="td-pdf-item">
-              <span class="td-pdf-icon">📄</span>
-              <span class="td-pdf-name" title="${esc(p.url)}">${esc(p.name)}</span>
-              <a class="td-pdf-open" href="${esc(p.url)}" target="_blank">Ouvrir</a>
-              <button class="td-pdf-del" onclick="delPdf('${r.id}','${t.id}',${i})">×</button>
+              <div class="td-pdf-top">
+                <span class="td-pdf-icon">📄</span>
+                <span class="td-pdf-name" title="${esc(p.url)}">${esc(p.name)}</span>
+              </div>
+              <div class="td-pdf-actions">
+                <a class="td-pdf-open" href="${esc(p.url)}" target="_blank">Ouvrir</a>
+                <button class="td-pdf-del" onclick="delPdf('${r.id}','${t.id}',${i})">×</button>
+              </div>
             </div>`).join('')||'<span style="font-size:13px;color:var(--text3);font-style:italic">Aucun document</span>'}
           </div>
           <div class="td-pdf-add" id="pdfadd-${t.id}">
