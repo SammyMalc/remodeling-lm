@@ -451,6 +451,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   .col-panel.collapsed .sidebar-list,
   .col-panel.collapsed .retro-body,
   .col-panel.collapsed .logi-body,
+  .col-panel.collapsed .logi-search-wrap,
   .col-panel.collapsed .logi-filters,
   .col-panel.collapsed .logi-summary,
   .col-panel.collapsed .logi-rdv-section,
@@ -881,6 +882,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .col-panel.collapsed .sidebar-list,
 .col-panel.collapsed .retro-body,
 .col-panel.collapsed .logi-body,
+.col-panel.collapsed .logi-search-wrap,
 .col-panel.collapsed .logi-filters,
 .col-panel.collapsed .logi-summary,
 .col-panel.collapsed .logi-rdv-section,
@@ -913,6 +915,14 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
 
 .task-implant-badge{font-size:16px;flex-shrink:0;cursor:help;line-height:1;}
+
+
+.logi-search-wrap{padding:8px 16px 2px;position:relative;}
+.logi-search-inp{width:100%;box-sizing:border-box;background:var(--bg3);border:1.5px solid var(--border2);color:var(--text);font-size:13px;padding:8px 34px 8px 12px;border-radius:10px;outline:none;font-family:var(--font);}
+.logi-search-inp:focus{border-color:var(--green);}
+.logi-search-inp::placeholder{color:var(--text3);}
+.logi-search-clear{position:absolute;right:24px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;line-height:1;padding:0;}
+.logi-search-clear:hover{color:var(--text);}
 
 </style>
 </head>
@@ -1093,6 +1103,10 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <button class="col-collapse-btn" onclick="toggleCollapse('col-logi')" title="Réduire">▶</button>
         <span class="col-head-lbl">🚚 Logistique</span>
         <div class="col-collapsed-icon"><span class="col-ci-emoji">🚚</span><span class="col-ci-label">Logistique</span></div>
+      </div>
+      <div class="logi-search-wrap">
+        <input class="logi-search-inp" id="logi-search" type="text" placeholder="🔍 Rechercher par tâche ou rayon…" oninput="logiSearch(this.value)"/>
+        <button class="logi-search-clear" onclick="logiClearSearch()" title="Effacer">×</button>
       </div>
       <div class="logi-filters" id="logi-filters">
         <button class="logi-filter-btn active" data-filter="all" onclick="logiSetFilter('all')">Tout</button>
@@ -1854,6 +1868,18 @@ function setAdressage(rid, tid, v){
 // ══ COMMANDES ══
 const CMD_STATUSES = ['En attente','Reçue'];
 let _logiFilter = 'all';
+let _logiQuery = '';
+
+function logiSearch(v){
+  _logiQuery = v.trim().toLowerCase();
+  renderLogistique();
+}
+function logiClearSearch(){
+  _logiQuery = '';
+  const inp = document.getElementById('logi-search');
+  if(inp) inp.value = '';
+  renderLogistique();
+}
 
 function cmdStatusClass(s){
   if(s==='Reçue') return 'recue';
@@ -1975,8 +2001,9 @@ function renderLogistique(){
 
 
 
-  // Filtre
+  // Filtre recherche
   let filtered = all.filter(({cmd})=>{
+    if(_logiQuery) return task.label.toLowerCase().includes(_logiQuery) || rayon.name.toLowerCase().includes(_logiQuery);
     if(_logiFilter==='all') return true;
     if(_logiFilter==='recue') return cmd.status==='Reçue';
     if(_logiFilter==='retard'){
