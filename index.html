@@ -911,6 +911,9 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .implant-check.disabled{opacity:.4;pointer-events:none;}
 .rc-badge.finalized{background:#1a6b3222;color:#1a6b32;border:1px solid #a8d5b2;}
 
+
+.task-implant-badge{font-size:16px;flex-shrink:0;cursor:help;line-height:1;}
+
 </style>
 </head>
 <body>
@@ -1295,12 +1298,13 @@ function barColor(p, u, col){
 function teamColor(n){return(TEAM.find(m=>m.name===n)||{color:'#8fa89a'}).color;}
 function rayonsOf(u){return(state.rayons||[]).filter(r=>r.universe===u);}
 function univPct(u){const rs=rayonsOf(u);if(!rs.length)return 0;const t=rs.reduce((s,r)=>s+r.tasks.length,0);if(!t)return 0;return Math.round(rs.reduce((s,r)=>s+r.tasks.filter(t=>t.done).length,0)/t*100);}
-function isFinalized(r){ return r.implante && r.micromerch && r.adressage; }
+function isTaskFinalized(t){ return t.implante && t.micromerch && t.adressage; }
+function isRayonFinalized(r){ return (r.tasks||[]).length>0 && (r.tasks||[]).every(t=>isTaskFinalized(t)); }
 function statusBadge(r){
   const p=pct(r);
-  if(isFinalized(r)) return '<span class="rc-badge finalized">🏁 Finalisé</span>';
+  if(isRayonFinalized(r)) return '<span class="rc-badge finalized">🏁 Finalisé</span>';
   if(p===100) return '<span class="rc-badge done">✓ Prêt à implanter</span>';
-  if(r.implante) return '<span class="rc-badge live">🏗️ Implanté</span>';
+  if((r.tasks||[]).some(t=>t.implante)) return '<span class="rc-badge live">🏗️ En cours implant.</span>';
   if(r.status==='live') return '<span class="rc-badge live">● Live</span>';
   return '<span class="rc-badge soon">Bientôt</span>';
 }
@@ -1316,15 +1320,15 @@ function makeTask(label, taskType){
 }
 function migrate(r){
   r.universe=r.universe||'CUISINE';
-  if(r.implante===undefined) r.implante=false;
-  if(r.micromerch===undefined) r.micromerch=false;
-  if(r.adressage===undefined) r.adressage=false;
   (r.tasks||[]).forEach(t=>{
     t.urgent=t.urgent||false; t.notes=t.notes||''; if(!t.subtasks)t.subtasks=[];
     t.subtasks=t.subtasks.map(s=>typeof s==='string'?{label:s,done:false}:s);
     if(!t.taskType)t.taskType='showroom'; // migration ancienne tâche
     if(!t.pdfs)t.pdfs=[];
     if(!t.cmds)t.cmds=[];
+    if(t.implante===undefined) t.implante=false;
+    if(t.micromerch===undefined) t.micromerch=false;
+    if(t.adressage===undefined) t.adressage=false;
     t.cmds.forEach(c=>{ if(c.status&&c.status!=='En attente'&&c.status!=='Reçue') c.status='En attente'; });
   });
 }
@@ -1507,7 +1511,7 @@ function render(){
   const totalT=(state.rayons||[]).reduce((s,r)=>s+(r.tasks||[]).length,0);
   const doneT=(state.rayons||[]).reduce((s,r)=>s+(r.tasks||[]).filter(t=>t.done).length,0);
   const deployed=(state.rayons||[]).filter(r=>pct(r)===100).length;
-  const finalized=(state.rayons||[]).filter(r=>r.implante&&r.micromerch&&r.adressage).length;
+  const finalized=(state.rayons||[]).filter(r=>isRayonFinalized(r)).length;
   const gp=totalT?Math.round(doneT/totalT*100):0;
   const gc=barColor(gp,'');
 
@@ -1624,6 +1628,7 @@ function renderDetail(){
         ${t.notes?`<span style="font-size:16px;cursor:help;flex-shrink:0" title="${esc(t.notes)}">ℹ️</span>`:''}
         ${(t.pdfs&&t.pdfs.length)?`<span style="font-size:15px;flex-shrink:0" title="${t.pdfs.length} document${t.pdfs.length>1?'s':''}">📎</span>`:''}
         ${t.assign?`<span style="font-size:12px;font-weight:700;color:#fff;background:${teamColor(t.assign)};padding:3px 9px;border-radius:99px;flex-shrink:0;">${esc(t.assign)}</span>`:''}
+        ${t.implante?`<span class="task-implant-badge ${isTaskFinalized(t)?'finalized':t.micromerch&&t.adressage?'finalized':''}" title="${isTaskFinalized(t)?'Finalisé':t.micromerch&&t.adressage?'Finalisé':'Implanté — micro-merch/adressage en attente'}">${isTaskFinalized(t)?'🏁':'🏗️'}</span>`:''}
         <div class="task-progress-wrap">
           <div class="task-progress-bar">
             <div class="task-progress-fill" style="width:${taskPct(t)}%;background:${taskPct(t)===100?'var(--green)':taskPct(t)>=50?'var(--orange)':'var(--rangement)'}"></div>
@@ -1675,6 +1680,23 @@ function renderDetail(){
             <input class="td-pdf-name-inp" type="text" id="pdfname-${t.id}" placeholder="Nom du document"/>
             <input class="td-pdf-url" type="text" id="pdfurl-${t.id}" placeholder="Lien Google Drive…" onkeydown="if(event.key==='Enter')addPdf('${r.id}','${t.id}')"/>
             <button class="td-pdf-add-btn" onclick="addPdf('${r.id}','${t.id}')">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="td-row" style="width:100%">
+          <div class="implant-bar" style="width:100%">
+            <label class="implant-toggle">
+              <input type="checkbox" ${t.implante?'checked':''} onchange="setImplante('${r.id}','${t.id}',this.checked)"/>
+              <span class="implant-toggle-lbl">🏗️ Implanté</span>
+            </label>
+            <div class="implant-sep"></div>
+            <label class="implant-check ${t.implante?'':'disabled'}">
+              <input type="checkbox" ${t.micromerch?'checked':''} ${t.implante?'':'disabled'} onchange="setMicromerch('${r.id}','${t.id}',this.checked)"/>
+              <span class="implant-check-lbl">✅ Micro-merch OK</span>
+            </label>
+            <label class="implant-check ${t.implante?'':'disabled'}">
+              <input type="checkbox" ${t.adressage?'checked':''} ${t.implante?'':'disabled'} onchange="setAdressage('${r.id}','${t.id}',this.checked)"/>
+              <span class="implant-check-lbl">✅ Adressage OK</span>
+            </label>
           </div>
         </div>
         <div class="td-row" style="flex-direction:column;gap:6px;width:100%">
@@ -1744,21 +1766,6 @@ function renderDetail(){
       </div>
       <div class="eq-row"><span class="eq-lbl">Équipe :</span>${membersH}</div>
     </div>
-    <div class="implant-bar">
-      <label class="implant-toggle">
-        <input type="checkbox" ${r.implante?'checked':''} onchange="setImplante('${r.id}',this.checked)"/>
-        <span class="implant-toggle-lbl">🏗️ Implanté</span>
-      </label>
-      <div class="implant-sep"></div>
-      <label class="implant-check ${r.implante?'':'disabled'}">
-        <input type="checkbox" ${r.micromerch?'checked':''} ${r.implante?'':'disabled'} onchange="setMicromerch('${r.id}',this.checked)"/>
-        <span class="implant-check-lbl">✅ Micro-merch OK</span>
-      </label>
-      <label class="implant-check ${r.implante?'':'disabled'}">
-        <input type="checkbox" ${r.adressage?'checked':''} ${r.implante?'':'disabled'} onchange="setAdressage('${r.id}',this.checked)"/>
-        <span class="implant-check-lbl">✅ Adressage OK</span>
-      </label>
-    </div>
     <div class="tasks-header-card"><span class="tasks-title">Tâches</span><span class="tasks-count">${doneC}/${(r.tasks||[]).length} complétées</span></div>
     <div>
       ${tasksH||'<div style="padding:24px;text-align:center;color:var(--text3);font-size:15px;font-weight:600;">Aucune tâche — ajoutez-en ci-dessous</div>'}
@@ -1827,19 +1834,22 @@ function setUrgent(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(
 
 
 // ══ IMPLANTATION ══
-function setImplante(rid, v){
+function setImplante(rid, tid, v){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
-  r.implante=v;
-  if(!v){ r.micromerch=false; r.adressage=false; }
-  save(v?'🏗️ Implanté : '+r.name:'🏗️ Implantation retirée : '+r.name);
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.implante=v;
+  if(!v){ t.micromerch=false; t.adressage=false; }
+  save(v?'🏗️ Implanté : '+t.label:'🏗️ Implantation retirée : '+t.label);
 }
-function setMicromerch(rid, v){
+function setMicromerch(rid, tid, v){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
-  r.micromerch=v; save('✅ Micro-merch '+r.name+' : '+(v?'OK':'retiré'));
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.micromerch=v; save('✅ Micro-merch "'+t.label+'" : '+(v?'OK':'retiré'));
 }
-function setAdressage(rid, v){
+function setAdressage(rid, tid, v){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
-  r.adressage=v; save('✅ Adressage '+r.name+' : '+(v?'OK':'retiré'));
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.adressage=v; save('✅ Adressage "'+t.label+'" : '+(v?'OK':'retiré'));
 }
 // ══ COMMANDES ══
 const CMD_STATUSES = ['En attente','Reçue'];
