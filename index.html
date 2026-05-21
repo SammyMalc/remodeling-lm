@@ -1071,12 +1071,12 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     <div class="col-panel" id="col-mytasks" style="width:220px">
       <div class="col-head">
         <button class="col-collapse-btn" onclick="toggleCollapse('col-mytasks')" title="Réduire">▶</button>
-        <span class="col-head-lbl">👤 Mes tâches</span>
+        <span class="col-head-lbl">👤 Mes sous-rayonss</span>
         <span class="mytasks-head-count" id="mytasks-count">0</span>
-        <div class="col-collapsed-icon"><span class="col-ci-emoji">👤</span><span class="col-ci-label">Mes tâches</span></div>
+        <div class="col-collapsed-icon"><span class="col-ci-emoji">👤</span><span class="col-ci-label">Mes sous-rayonss</span></div>
       </div>
       <div class="col-body" id="mytasks-body">
-        <div class="mytask-empty">Connectez-vous pour voir vos tâches.</div>
+        <div class="mytask-empty">Connectez-vous pour voir vos sous-rayons.</div>
       </div>
     </div>
 
@@ -1090,7 +1090,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <div class="col-collapsed-icon"><span class="col-ci-emoji">👥</span><span class="col-ci-label">Équipe</span></div>
       </div>
       <div class="col-body" id="teamtasks-body">
-        <div class="teamtasks-empty">Aucune tâche assignée.</div>
+        <div class="teamtasks-empty">Aucun sous-rayon assigné.</div>
       </div>
     </div>
 
@@ -1105,7 +1105,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <div class="col-collapsed-icon"><span class="col-ci-emoji">🚚</span><span class="col-ci-label">Logistique</span></div>
       </div>
       <div class="logi-search-wrap">
-        <input class="logi-search-inp" id="logi-search" type="text" placeholder="🔍 Rechercher par tâche ou rayon…" oninput="logiSearch(this.value)"/>
+        <input class="logi-search-inp" id="logi-search" type="text" placeholder="🔍 Rechercher par sous-rayon ou rayon…" oninput="logiSearch(this.value)"/>
         <button class="logi-search-clear" onclick="logiClearSearch()" title="Effacer">×</button>
       </div>
       <div class="logi-filters" id="logi-filters">
@@ -1135,7 +1135,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     </button>
     <button class="mobile-tab" id="tab-taches" onclick="mobileGoTo('col-detail','tab-taches')">
       <span class="mobile-tab-icon">✅</span>
-      <span class="mobile-tab-label">Tâches</span>
+      <span class="mobile-tab-label">Sous-rayons</span>
     </button>
     <button class="mobile-tab" id="tab-retro" onclick="mobileGoTo('col-retro','tab-retro')">
       <span class="mobile-tab-icon">📅</span>
@@ -1143,7 +1143,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     </button>
     <button class="mobile-tab" id="tab-moi" onclick="mobileGoTo('col-mytasks','tab-moi')">
       <span class="mobile-tab-icon">👤</span>
-      <span class="mobile-tab-label">Mes tâches</span>
+      <span class="mobile-tab-label">Mes sous-rayons</span>
       <span class="mobile-tab-badge" id="mobile-badge-moi" style="display:none"></span>
     </button>
     <button class="mobile-tab" id="tab-equipe" onclick="mobileGoTo('col-teamtasks','tab-equipe')">
@@ -1208,9 +1208,9 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       <button class="uni-btn sel-cuisine" id="uni-c" onclick="selUni('CUISINE')">🍳 CUISINE</button>
       <button class="uni-btn" id="uni-r" onclick="selUni('RANGEMENT')">📦 RANGEMENT</button>
     </div>
-    <div class="modal-lbl">Tâches initiales</div>
+    <div class="modal-lbl">Sous-rayons initiaux</div>
     <div class="modal-tadd">
-      <input type="text" id="new-task-field" placeholder="Ajouter une tâche…"/>
+      <input type="text" id="new-task-field" placeholder="Ajouter un sous-rayon…"/>
       <button onclick="addModalTask()">+</button>
     </div>
     <div class="modal-tlist" id="modal-tlist"></div>
@@ -1314,6 +1314,10 @@ function rayonsOf(u){return(state.rayons||[]).filter(r=>r.universe===u);}
 function univPct(u){const rs=rayonsOf(u);if(!rs.length)return 0;const t=rs.reduce((s,r)=>s+r.tasks.length,0);if(!t)return 0;return Math.round(rs.reduce((s,r)=>s+r.tasks.filter(t=>t.done).length,0)/t*100);}
 function isTaskFinalized(t){ return t.implante && t.micromerch && t.adressage; }
 function isRayonFinalized(r){ return (r.tasks||[]).length>0 && (r.tasks||[]).every(t=>isTaskFinalized(t)); }
+function finalizedCount(r){
+  const tasks = r.tasks||[];
+  return tasks.filter(t=>isTaskFinalized(t)).length+'/'+tasks.length;
+}
 function statusBadge(r){
   const p=pct(r);
   if(isRayonFinalized(r)) return '<span class="rc-badge finalized">🏁 Finalisé</span>';
@@ -1535,9 +1539,9 @@ function render(){
   document.getElementById('hero-pct').style.color=gp>=100?'#2d9e4f':gp>=50?'#3d9142':'#4aab57';
   document.getElementById('hero-stats').innerHTML=`
     <div class="hero-compact-stat"><div class="hero-compact-stat-num">${total}</div><div class="hero-compact-stat-lbl">Rayons</div></div>
-    <div class="hero-compact-stat"><div class="hero-compact-stat-num">${doneT}/${totalT}</div><div class="hero-compact-stat-lbl">Tâches</div></div>
+    <div class="hero-compact-stat"><div class="hero-compact-stat-num">${doneT}/${totalT}</div><div class="hero-compact-stat-lbl">Sous-rayons</div></div>
     <div class="hero-compact-stat"><div class="hero-compact-stat-num" style="color:#2d9e4f">${deployed}</div><div class="hero-compact-stat-lbl">Prêts</div></div>
-    <div class="hero-compact-stat"><div class="hero-compact-stat-num" style="color:#1a6b32">${finalized}</div><div class="hero-compact-stat-lbl">Finalisés</div></div>`;
+    <div class="hero-compact-stat" title="Sous-rayons : Implanté + Micro-merch OK + Adressage OK"><div class="hero-compact-stat-num" style="color:#1a6b32">${finalized}</div><div class="hero-compact-stat-lbl">🏁 Finalisés</div></div>`;
 
   const cp=univPct('CUISINE'),rp=univPct('RANGEMENT');
   const cn=rayonsOf('CUISINE').length,rn=rayonsOf('RANGEMENT').length;
@@ -1574,7 +1578,7 @@ function render(){
         <div class="rc-top">
           <div class="rc-icon" style="background:${r.color}18;color:${r.color}">${r.emoji||'📦'}</div>
           <span class="rc-name">${esc(r.name)}</span>
-          ${statusBadge(r)}
+          ${statusBadge(r)}${(r.tasks||[]).some(t=>isTaskFinalized(t))?`<span style="font-size:11px;font-weight:700;color:#1a6b32;background:#e8f5ec;padding:2px 7px;border-radius:99px;">🏁 ${finalizedCount(r)}</span>`:'' }
         </div>
         <div class="rc-bar-row">
           <div class="rc-track"><div class="rc-fill" style="width:${p}%;background:${c}"></div></div>
@@ -1780,13 +1784,13 @@ function renderDetail(){
       </div>
       <div class="eq-row"><span class="eq-lbl">Équipe :</span>${membersH}</div>
     </div>
-    <div class="tasks-header-card"><span class="tasks-title">Tâches</span><span class="tasks-count">${doneC}/${(r.tasks||[]).length} complétées</span></div>
+    <div class="tasks-header-card"><span class="tasks-title">Sous-rayons</span><span class="tasks-count">${doneC}/${(r.tasks||[]).length} complétés</span></div>
     <div>
-      ${tasksH||'<div style="padding:24px;text-align:center;color:var(--text3);font-size:15px;font-weight:600;">Aucune tâche — ajoutez-en ci-dessous</div>'}
+      ${tasksH||'<div style="padding:24px;text-align:center;color:var(--text3);font-size:15px;font-weight:600;">Aucun sous-rayon — ajoutez-en ci-dessous</div>'}
     </div>
     <div class="add-task-card">
-      <input class="add-task-inp" type="text" id="add-task-${r.id}" placeholder="+ Nouvelle tâche…" onkeydown="if(event.key==='Enter')addTask('${r.id}')"/>
-      <select id="task-type-${r.id}" style="background:var(--bg3);border:2px solid var(--border2);color:var(--text);font-size:13px;font-weight:700;padding:8px 12px;border-radius:10px;cursor:pointer;font-family:var(--font);outline:none;flex-shrink:0;" title="Type de tâche">
+      <input class="add-task-inp" type="text" id="add-task-${r.id}" placeholder="+ Nouveau sous-rayon…" onkeydown="if(event.key==='Enter')addTask('${r.id}')"/>
+      <select id="task-type-${r.id}" style="background:var(--bg3);border:2px solid var(--border2);color:var(--text);font-size:13px;font-weight:700;padding:8px 12px;border-radius:10px;cursor:pointer;font-family:var(--font);outline:none;flex-shrink:0;" title="Type de sous-rayon">
         <option value="showroom">🛋 Showroom</option>
         <option value="fond_rayon">📦 Fond de rayon</option>
       </select>
@@ -2170,7 +2174,7 @@ function addTask(rid){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
   if(!r.tasks)r.tasks=[];
   r.tasks.push(makeTask(v, taskType)); inp.value='';
-  save(`+ Tâche "${v}" [${taskType==='showroom'?'Showroom':'Fond de rayon'}] (${r.name})`);
+  save(`+ Sous-rayon "${v}" [${taskType==='showroom'?'Showroom':'Fond de rayon'}] (${r.name})`);
 }
 function delTask(rid,tid){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);r.tasks=(r.tasks||[]).filter(x=>x.id!==tid);save(`− Tâche "${t?t.label:''}" supprimée`);}
 function delRayon(rid){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;if(!confirm(`Supprimer "${r.name}" ?`))return;if(selectedId===rid)selectedId=null;state.rayons=(state.rayons||[]).filter(x=>x.id!==rid);save(`− Rayon "${r.name}" supprimé`);}
@@ -2469,7 +2473,7 @@ function renderMyTasks(){
   if(countEl)countEl.textContent=pending;
 
   if(!myTasks.length){
-    body.innerHTML='<div class="mytask-empty">Aucune tâche assignée.</div>';
+    body.innerHTML='<div class="mytask-empty">Aucun sous-rayon assigné.</div>';
     return;
   }
 
@@ -2559,7 +2563,7 @@ function renderTeamTasks(){
   const members=TEAM.filter(m=>byMember[m.name].length>0);
 
   if(!members.length){
-    body.innerHTML=`<div class="teamtasks-empty">Aucune tâche assignée dans l'équipe.</div>`;
+    body.innerHTML=`<div class="teamtasks-empty">Aucun sous-rayon assigné dans l'équipe.</div>`;
     return;
   }
 
