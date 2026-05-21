@@ -569,6 +569,11 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   .retro-modal-inp{font-size:16px;padding:13px 16px;}
 
 
+  /* PDF add form mobile — champs et bouton en colonne */
+  .td-pdf-add{flex-direction:column;}
+  .td-pdf-name-inp,.td-pdf-url{width:100%;font-size:16px;padding:11px 14px;}
+  .td-pdf-add-btn{width:100%;font-size:15px;padding:12px;text-align:center;}
+
   /* Commandes mobile */
   .td-cmd-inp{font-size:16px;padding:11px 14px;}
   .td-cmd-add-btn{font-size:14px;padding:11px 18px;}
@@ -678,7 +683,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .td-pdf-open:hover{background:var(--green);color:#fff;}
 .td-pdf-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 5px;flex-shrink:0;}
 .td-pdf-del:hover{color:var(--red);}
-.td-pdf-add{display:flex;gap:7px;margin-top:2px;}
+.td-pdf-add{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px;}
 .td-pdf-url{flex:1;background:var(--bg3);border:1.5px solid var(--border2);color:var(--text);font-size:13px;padding:8px 11px;border-radius:8px;outline:none;font-family:var(--font);}
 .td-pdf-url:focus{border-color:var(--green);}
 .td-pdf-url::placeholder{color:var(--text3);}
