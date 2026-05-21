@@ -2002,22 +2002,31 @@ function renderLogistique(){
 
 
   // Filtre recherche
-  let filtered = all.filter(({cmd})=>{
-    if(_logiQuery) return task.label.toLowerCase().includes(_logiQuery) || rayon.name.toLowerCase().includes(_logiQuery);
-    if(_logiFilter==='all') return true;
-    if(_logiFilter==='recue') return cmd.status==='Reçue';
-    if(_logiFilter==='retard'){
-      if(cmd.status==='Reçue') return false;
-      if(!cmd.date) return false;
-      const d=new Date(cmd.date);d.setHours(0,0,0,0);return d<today;
-    }
-    if(_logiFilter==='avenir'){
-      if(cmd.status==='Reçue') return false;
-      if(!cmd.date) return true;
-      const d=new Date(cmd.date);d.setHours(0,0,0,0);return d>=today;
-    }
-    return true;
-  });
+  // Si recherche active : afficher TOUTES les commandes correspondantes sans filtre statut
+  let filtered;
+  if(_logiQuery){
+    filtered = all.filter(({cmd,task,rayon})=>
+      task.label.toLowerCase().includes(_logiQuery) ||
+      rayon.name.toLowerCase().includes(_logiQuery) ||
+      cmd.num.toLowerCase().includes(_logiQuery)
+    );
+  } else {
+    filtered = all.filter(({cmd})=>{
+      if(_logiFilter==='all') return true;
+      if(_logiFilter==='recue') return cmd.status==='Reçue';
+      if(_logiFilter==='retard'){
+        if(cmd.status==='Reçue') return false;
+        if(!cmd.date) return false;
+        const d=new Date(cmd.date);d.setHours(0,0,0,0);return d<today;
+      }
+      if(_logiFilter==='avenir'){
+        if(cmd.status==='Reçue') return false;
+        if(!cmd.date) return true;
+        const d=new Date(cmd.date);d.setHours(0,0,0,0);return d>=today;
+      }
+      return true;
+    });
+  }
 
   if(!filtered.length){body.innerHTML='<div class="logi-empty">Aucune commande correspondante.</div>';return;}
 
