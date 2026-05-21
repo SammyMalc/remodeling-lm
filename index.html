@@ -898,6 +898,19 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .col-collapsed-icon .col-ci-label{writing-mode:vertical-rl;text-orientation:mixed;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);white-space:nowrap;}
 .col-panel.collapsed .col-collapsed-icon{display:flex;}
 
+
+/* ══ IMPLANTATION ══ */
+.implant-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 16px;background:var(--bg3);border-radius:12px;margin-bottom:4px;border:1.5px solid var(--border);}
+.implant-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.implant-toggle input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0;}
+.implant-toggle-lbl{font-size:13px;font-weight:800;color:var(--text);}
+.implant-sep{width:1px;height:20px;background:var(--border2);flex-shrink:0;}
+.implant-check{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+.implant-check input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0;}
+.implant-check-lbl{font-size:12px;font-weight:700;color:var(--text2);}
+.implant-check.disabled{opacity:.4;pointer-events:none;}
+.rc-badge.finalized{background:#1a6b3222;color:#1a6b32;border:1px solid #a8d5b2;}
+
 </style>
 </head>
 <body>
@@ -1282,7 +1295,15 @@ function barColor(p, u, col){
 function teamColor(n){return(TEAM.find(m=>m.name===n)||{color:'#8fa89a'}).color;}
 function rayonsOf(u){return(state.rayons||[]).filter(r=>r.universe===u);}
 function univPct(u){const rs=rayonsOf(u);if(!rs.length)return 0;const t=rs.reduce((s,r)=>s+r.tasks.length,0);if(!t)return 0;return Math.round(rs.reduce((s,r)=>s+r.tasks.filter(t=>t.done).length,0)/t*100);}
-function statusBadge(r){const p=pct(r);if(p===100)return'<span class="rc-badge done">✓ Prêt à implanter</span>';if(r.status==='live')return'<span class="rc-badge live">● Live</span>';return'<span class="rc-badge soon">Bientôt</span>';}
+function isFinalized(r){ return r.implante && r.micromerch && r.adressage; }
+function statusBadge(r){
+  const p=pct(r);
+  if(isFinalized(r)) return '<span class="rc-badge finalized">🏁 Finalisé</span>';
+  if(p===100) return '<span class="rc-badge done">✓ Prêt à implanter</span>';
+  if(r.implante) return '<span class="rc-badge live">🏗️ Implanté</span>';
+  if(r.status==='live') return '<span class="rc-badge live">● Live</span>';
+  return '<span class="rc-badge soon">Bientôt</span>';
+}
 function makeTask(label, taskType){
   taskType = taskType || 'showroom';
   const template = taskType === 'fond_rayon' ? SUBTASKS_FOND_RAYON : SUBTASKS_SHOWROOM;
@@ -1295,6 +1316,9 @@ function makeTask(label, taskType){
 }
 function migrate(r){
   r.universe=r.universe||'CUISINE';
+  if(r.implante===undefined) r.implante=false;
+  if(r.micromerch===undefined) r.micromerch=false;
+  if(r.adressage===undefined) r.adressage=false;
   (r.tasks||[]).forEach(t=>{
     t.urgent=t.urgent||false; t.notes=t.notes||''; if(!t.subtasks)t.subtasks=[];
     t.subtasks=t.subtasks.map(s=>typeof s==='string'?{label:s,done:false}:s);
@@ -1483,6 +1507,7 @@ function render(){
   const totalT=(state.rayons||[]).reduce((s,r)=>s+(r.tasks||[]).length,0);
   const doneT=(state.rayons||[]).reduce((s,r)=>s+(r.tasks||[]).filter(t=>t.done).length,0);
   const deployed=(state.rayons||[]).filter(r=>pct(r)===100).length;
+  const finalized=(state.rayons||[]).filter(r=>r.implante&&r.micromerch&&r.adressage).length;
   const gp=totalT?Math.round(doneT/totalT*100):0;
   const gc=barColor(gp,'');
 
@@ -1493,7 +1518,8 @@ function render(){
   document.getElementById('hero-stats').innerHTML=`
     <div class="hero-compact-stat"><div class="hero-compact-stat-num">${total}</div><div class="hero-compact-stat-lbl">Rayons</div></div>
     <div class="hero-compact-stat"><div class="hero-compact-stat-num">${doneT}/${totalT}</div><div class="hero-compact-stat-lbl">Tâches</div></div>
-    <div class="hero-compact-stat"><div class="hero-compact-stat-num" style="color:#2d9e4f">${deployed}</div><div class="hero-compact-stat-lbl">Prêts</div></div>`;
+    <div class="hero-compact-stat"><div class="hero-compact-stat-num" style="color:#2d9e4f">${deployed}</div><div class="hero-compact-stat-lbl">Prêts</div></div>
+    <div class="hero-compact-stat"><div class="hero-compact-stat-num" style="color:#1a6b32">${finalized}</div><div class="hero-compact-stat-lbl">Finalisés</div></div>`;
 
   const cp=univPct('CUISINE'),rp=univPct('RANGEMENT');
   const cn=rayonsOf('CUISINE').length,rn=rayonsOf('RANGEMENT').length;
@@ -1718,6 +1744,21 @@ function renderDetail(){
       </div>
       <div class="eq-row"><span class="eq-lbl">Équipe :</span>${membersH}</div>
     </div>
+    <div class="implant-bar">
+      <label class="implant-toggle">
+        <input type="checkbox" ${r.implante?'checked':''} onchange="setImplante('${r.id}',this.checked)"/>
+        <span class="implant-toggle-lbl">🏗️ Implanté</span>
+      </label>
+      <div class="implant-sep"></div>
+      <label class="implant-check ${r.implante?'':'disabled'}">
+        <input type="checkbox" ${r.micromerch?'checked':''} ${r.implante?'':'disabled'} onchange="setMicromerch('${r.id}',this.checked)"/>
+        <span class="implant-check-lbl">✅ Micro-merch OK</span>
+      </label>
+      <label class="implant-check ${r.implante?'':'disabled'}">
+        <input type="checkbox" ${r.adressage?'checked':''} ${r.implante?'':'disabled'} onchange="setAdressage('${r.id}',this.checked)"/>
+        <span class="implant-check-lbl">✅ Adressage OK</span>
+      </label>
+    </div>
     <div class="tasks-header-card"><span class="tasks-title">Tâches</span><span class="tasks-count">${doneC}/${(r.tasks||[]).length} complétées</span></div>
     <div>
       ${tasksH||'<div style="padding:24px;text-align:center;color:var(--text3);font-size:15px;font-weight:600;">Aucune tâche — ajoutez-en ci-dessous</div>'}
@@ -1784,6 +1825,22 @@ function setTaskStatus(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid)
 function setTaskAssign(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.assign=v;save(`Assigné "${t.label}" → ${v||'—'}`);}
 function setUrgent(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.urgent=v;save(`${v?'⚡ Urgent':'Urgence retirée'} : "${t.label}"`);}
 
+
+// ══ IMPLANTATION ══
+function setImplante(rid, v){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  r.implante=v;
+  if(!v){ r.micromerch=false; r.adressage=false; }
+  save(v?'🏗️ Implanté : '+r.name:'🏗️ Implantation retirée : '+r.name);
+}
+function setMicromerch(rid, v){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  r.micromerch=v; save('✅ Micro-merch '+r.name+' : '+(v?'OK':'retiré'));
+}
+function setAdressage(rid, v){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  r.adressage=v; save('✅ Adressage '+r.name+' : '+(v?'OK':'retiré'));
+}
 // ══ COMMANDES ══
 const CMD_STATUSES = ['En attente','Reçue'];
 let _logiFilter = 'all';
