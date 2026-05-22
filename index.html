@@ -925,7 +925,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .logi-search-clear:hover{color:var(--text);}
 
 
-.logi-card-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.logi-card-header{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;}
 .logi-cat-badge{font-size:11px;font-weight:900;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.6px;flex-shrink:0;}
 .logi-cat-badge.showroom{background:#3b82f622;color:#1d4ed8;}
 .logi-cat-badge.implantation{background:#f59e0b22;color:#92400e;}
@@ -1744,6 +1744,14 @@ function renderDetail(){
                   ? '<span class="td-cmd-rdv-badge rdv-ok">✅ RDV confirmé</span>'
                   : '<span class="td-cmd-rdv-badge rdv-none">⏳ RDV à prendre</span>'}
               </div>
+              <div class="td-cmd-rdv" style="margin-top:2px;">
+                <span class="td-cmd-rdv-label">🏷️ Type :</span>
+                <select class="td-cmd-inp" style="font-size:13px;padding:5px 10px;width:auto;" onchange="setCmdCategorie('${r.id}','${t.id}',${i},this.value)">
+                  <option value="" ${!c.categorie?'selected':''}>— Choisir</option>
+                  <option value="showroom" ${c.categorie==='showroom'?'selected':''}>🖼️ Showroom</option>
+                  <option value="implantation" ${c.categorie==='implantation'?'selected':''}>🏗️ Implantation</option>
+                </select>
+              </div>
             </div>`).join('')}
           </div>
           <div class="td-cmd-add">
@@ -1880,20 +1888,19 @@ function setAdressage(rid, tid, v){
   t.adressage=v; save('✅ Adressage "'+t.label+'" : '+(v?'OK':'retiré'));
 }
 
-// ══ CLASSIFICATION COMMANDES ══
-const SHOWROOM_KEYWORDS = [
-  'showroom', 'ambiance', 'box', 'porte', 'vignette', 'rgt',
-  'caisson', 'aménagement', 'amenagement', 'fourniture', 'façade', 'facade'
-];
-function cmdCategorie(taskLabel){
-  const l = (taskLabel||'').toLowerCase();
-  if(SHOWROOM_KEYWORDS.some(k => l.includes(k))) return 'showroom';
-  return 'implantation';
+
+// ══ CATÉGORIE COMMANDE (manuelle) ══
+function setCmdCategorie(rid, tid, idx, v){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t||!t.cmds)return;
+  const c=t.cmds[idx];if(!c)return;
+  c.categorie=v;
+  save('🏷️ Catégorie commande "'+c.num+'" → '+v);
 }
-function cmdCategorieBadge(taskLabel){
-  const cat = cmdCategorie(taskLabel);
-  if(cat==='showroom') return '<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:#3b82f622;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;">🖼️ Showroom</span>';
-  return '<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:#f59e0b22;color:#92400e;text-transform:uppercase;letter-spacing:.5px;">🏗️ Implantation</span>';
+function cmdCatBadge(cat){
+  if(cat==='showroom') return '<span class="logi-cat-badge showroom">🖼️ Showroom</span>';
+  if(cat==='implantation') return '<span class="logi-cat-badge implantation">🏗️ Implantation</span>';
+  return '<span class="logi-cat-badge" style="background:var(--bg3);color:var(--text3);border:1px dashed var(--border2);">— Non défini</span>';
 }
 // ══ COMMANDES ══
 const CMD_STATUSES = ['En attente','Reçue'];
@@ -2054,8 +2061,8 @@ function renderLogistique(){
         if(!cmd.date) return true;
         const d=new Date(cmd.date);d.setHours(0,0,0,0);return d>=today;
       }
-      if(_logiFilter==='showroom') return cmdCategorie(task.label)==='showroom';
-      if(_logiFilter==='implantation') return cmdCategorie(task.label)==='implantation';
+      if(_logiFilter==='showroom') return cmd.categorie==='showroom';
+      if(_logiFilter==='implantation') return cmd.categorie==='implantation';
       return true;
     });
   }
@@ -2107,17 +2114,12 @@ function renderLogistique(){
       <div class="logi-week-hdr">${week}</div>
       ${items.map(({cmd,idx,task,rayon})=>`
         <div class="logi-card ${cardClass(cmd)}">
-          <!-- Ligne 1 : badge catégorie + N° commande + date + statut -->
           <div class="logi-card-header">
-            <span class="logi-cat-badge ${cmdCategorie(task.label)}">${cmdCategorie(task.label)==='showroom'?'🖼️ Showroom':'🏗️ Implantation'}</span>
+            ${cmdCatBadge(cmd.categorie)}
             <span class="logi-cmd-num">${esc(cmd.num)}</span>
-          </div>
-          <!-- Ligne 2 : date + statut -->
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span class="logi-date ${dateClass(cmd)}">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
+            <span class="logi-date ${dateClass(cmd)}" style="margin-left:auto;flex-shrink:0">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
             <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
           </div>
-          <!-- Ligne 3 : détail complet discret -->
           <div class="logi-detail">📋 ${esc(task.label)} &nbsp;·&nbsp; 📍 ${esc(rayon.name)}</div>
         </div>`).join('')}
     </div>`).join('');
