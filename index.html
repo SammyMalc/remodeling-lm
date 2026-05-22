@@ -1890,6 +1890,15 @@ function setAdressage(rid, tid, v){
 
 
 // ══ CATÉGORIE COMMANDE (manuelle) ══
+function cycleCmdCategorie(rid, tid, idx){
+  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
+  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t||!t.cmds)return;
+  const c=t.cmds[idx];if(!c)return;
+  const ordre=['','showroom','implantation'];
+  const cur=ordre.indexOf(c.categorie||'');
+  c.categorie=ordre[(cur+1)%ordre.length];
+  save('🏷️ "'+c.num+'" → '+(c.categorie||'Non défini'));
+}
 function setCmdCategorie(rid, tid, idx, v){
   const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
   const t=(r.tasks||[]).find(x=>x.id===tid);if(!t||!t.cmds)return;
@@ -2115,7 +2124,7 @@ function renderLogistique(){
       ${items.map(({cmd,idx,task,rayon})=>`
         <div class="logi-card ${cardClass(cmd)}">
           <div class="logi-card-header">
-            ${cmdCatBadge(cmd.categorie)}
+            <span onclick="cycleCmdCategorie('${rayon.id}','${task.id}',${idx})" style="cursor:pointer" title="Cliquer pour changer">${cmdCatBadge(cmd.categorie)}</span>
             <span class="logi-cmd-num">${esc(cmd.num)}</span>
             <span class="logi-date ${dateClass(cmd)}" style="margin-left:auto;flex-shrink:0">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
             <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
