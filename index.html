@@ -800,7 +800,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .logi-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:0;}
 .logi-week{margin-bottom:18px;}
 .logi-week-hdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:6px 0 10px 2px;border-bottom:1px solid var(--border);margin-bottom:10px;}
-.logi-card{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;position:relative;}
+.logi-card{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;}
 .logi-card.retard{border-left:3px solid #ef4444;}
 .logi-card.auj{border-left:3px solid #f59e0b;}
 .logi-card.avenir{border-left:3px solid #22c55e;}
@@ -813,7 +813,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .logi-date.recue{color:var(--text3);}
 .logi-tache{font-size:12px;color:var(--text2);margin-top:1px;}
 .logi-rayon{font-size:11px;color:var(--text3);}
-.logi-status-btn{position:absolute;top:10px;right:10px;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:var(--font);}
+.logi-status-btn{font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:var(--font);flex-shrink:0;}
 .logi-status-btn.attente{background:#f59e0b22;color:#b45309;}
 .logi-status-btn.recue{background:#22c55e22;color:#15803d;}
 
@@ -2107,15 +2107,18 @@ function renderLogistique(){
       <div class="logi-week-hdr">${week}</div>
       ${items.map(({cmd,idx,task,rayon})=>`
         <div class="logi-card ${cardClass(cmd)}">
-          <!-- Ligne 1 : badge catégorie + N° commande + date -->
+          <!-- Ligne 1 : badge catégorie + N° commande + date + statut -->
           <div class="logi-card-header">
             <span class="logi-cat-badge ${cmdCategorie(task.label)}">${cmdCategorie(task.label)==='showroom'?'🖼️ Showroom':'🏗️ Implantation'}</span>
             <span class="logi-cmd-num">${esc(cmd.num)}</span>
-            <span class="logi-date ${dateClass(cmd)}" style="flex-shrink:0">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
           </div>
-          <!-- Ligne 2 : détail complet discret -->
+          <!-- Ligne 2 : date + statut -->
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="logi-date ${dateClass(cmd)}">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
+            <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
+          </div>
+          <!-- Ligne 3 : détail complet discret -->
           <div class="logi-detail">📋 ${esc(task.label)} &nbsp;·&nbsp; 📍 ${esc(rayon.name)}</div>
-          <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
         </div>`).join('')}
     </div>`).join('');
 }
