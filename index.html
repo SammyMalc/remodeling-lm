@@ -924,6 +924,14 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .logi-search-clear{position:absolute;right:24px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;line-height:1;padding:0;}
 .logi-search-clear:hover{color:var(--text);}
 
+
+.logi-card-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.logi-cat-badge{font-size:11px;font-weight:900;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.6px;flex-shrink:0;}
+.logi-cat-badge.showroom{background:#3b82f622;color:#1d4ed8;}
+.logi-cat-badge.implantation{background:#f59e0b22;color:#92400e;}
+.logi-cmd-num{font-family:var(--mono);font-size:15px;font-weight:900;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.logi-detail{font-size:11px;color:var(--text3);margin-top:1px;line-height:1.4;}
+
 </style>
 </head>
 <body>
@@ -1113,6 +1121,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
         <button class="logi-filter-btn" data-filter="retard" onclick="logiSetFilter('retard')">🔴 En retard</button>
         <button class="logi-filter-btn" data-filter="avenir" onclick="logiSetFilter('avenir')">🟢 À venir</button>
         <button class="logi-filter-btn" data-filter="recue" onclick="logiSetFilter('recue')">✅ Reçues</button>
+        <button class="logi-filter-btn" data-filter="showroom" onclick="logiSetFilter('showroom')">🖼️ Showroom</button>
+        <button class="logi-filter-btn" data-filter="implantation" onclick="logiSetFilter('implantation')">🏗️ Implantation</button>
       </div>
       <div class="logi-rdv-section" id="logi-rdv-section">
         <div class="logi-rdv-title">📅 Rendez-vous de retrait à venir</div>
@@ -1869,6 +1879,22 @@ function setAdressage(rid, tid, v){
   const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;
   t.adressage=v; save('✅ Adressage "'+t.label+'" : '+(v?'OK':'retiré'));
 }
+
+// ══ CLASSIFICATION COMMANDES ══
+const SHOWROOM_KEYWORDS = [
+  'showroom', 'ambiance', 'box', 'porte', 'vignette', 'rgt',
+  'caisson', 'aménagement', 'amenagement', 'fourniture', 'façade', 'facade'
+];
+function cmdCategorie(taskLabel){
+  const l = (taskLabel||'').toLowerCase();
+  if(SHOWROOM_KEYWORDS.some(k => l.includes(k))) return 'showroom';
+  return 'implantation';
+}
+function cmdCategorieBadge(taskLabel){
+  const cat = cmdCategorie(taskLabel);
+  if(cat==='showroom') return '<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:#3b82f622;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;">🖼️ Showroom</span>';
+  return '<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:#f59e0b22;color:#92400e;text-transform:uppercase;letter-spacing:.5px;">🏗️ Implantation</span>';
+}
 // ══ COMMANDES ══
 const CMD_STATUSES = ['En attente','Reçue'];
 let _logiFilter = 'all';
@@ -2028,6 +2054,8 @@ function renderLogistique(){
         if(!cmd.date) return true;
         const d=new Date(cmd.date);d.setHours(0,0,0,0);return d>=today;
       }
+      if(_logiFilter==='showroom') return cmdCategorie(task.label)==='showroom';
+      if(_logiFilter==='implantation') return cmdCategorie(task.label)==='implantation';
       return true;
     });
   }
@@ -2079,12 +2107,14 @@ function renderLogistique(){
       <div class="logi-week-hdr">${week}</div>
       ${items.map(({cmd,idx,task,rayon})=>`
         <div class="logi-card ${cardClass(cmd)}">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding-right:90px">
-            <span class="logi-num">📦 ${esc(cmd.num)}</span>
-            <span class="logi-date ${dateClass(cmd)}">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
+          <!-- Ligne 1 : badge catégorie + N° commande + date -->
+          <div class="logi-card-header">
+            <span class="logi-cat-badge ${cmdCategorie(task.label)}">${cmdCategorie(task.label)==='showroom'?'🖼️ Showroom':'🏗️ Implantation'}</span>
+            <span class="logi-cmd-num">${esc(cmd.num)}</span>
+            <span class="logi-date ${dateClass(cmd)}" style="flex-shrink:0">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
           </div>
-          <div class="logi-tache">📋 ${esc(task.label)}</div>
-          <div class="logi-rayon">📍 ${esc(rayon.name)}</div>
+          <!-- Ligne 2 : détail complet discret -->
+          <div class="logi-detail">📋 ${esc(task.label)} &nbsp;·&nbsp; 📍 ${esc(rayon.name)}</div>
           <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
         </div>`).join('')}
     </div>`).join('');
