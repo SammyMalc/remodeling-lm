@@ -932,6 +932,20 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .logi-cmd-num{font-family:var(--mono);font-size:15px;font-weight:900;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .logi-detail{font-size:11px;color:var(--text3);margin-top:1px;line-height:1.4;}
 
+
+/* ══ SYNC STATUS AMÉLIORÉ ══ */
+.sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s;}
+.sync-dot.ok{background:#22c55e;}
+.sync-dot.syncing{background:#f59e0b;animation:pulse-sync .8s infinite;}
+.sync-dot.error{background:#ef4444;}
+.sync-label{font-size:11px;font-weight:700;transition:color .3s;}
+.sync-label.ok{color:#15803d;}
+.sync-label.syncing{color:#92400e;}
+.sync-label.error{color:#b91c1c;}
+.sync-confirm{font-size:10px;color:#15803d;font-weight:600;opacity:0;transition:opacity .5s;}
+.sync-confirm.show{opacity:1;}
+@keyframes pulse-sync{0%,100%{opacity:1;}50%{opacity:.4;}}
+
 </style>
 </head>
 <body>
@@ -1237,6 +1251,7 @@ const JSONBIN_ID      = '69d51152856a6821890a3846';
 const JSONBIN_KEY     = '$2a$10$qMJ4J.xs3uQaoKneSBNZ/O9fHb2W2grN/PrhwIBGhwgUiWX82w4g.';
 const JSONBIN_READ_KEY= '$2a$10$aY9pWpTN5QMqGrnBwMCHuu4ASXoV7FDsyOAq.IyySs5uuYDmqER0e';
 const JSONBIN_URL     = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
+const GAS_URL         = 'https://script.google.com/macros/s/AKfycby5GIrK06tldgPvZIdNMd4G7xMC63O_jATLSz8sUHhY4pEpP177a5kPxM7viWvo0OQlUQ/exec';
 const LS_USER  = 'lm_user_v2';
 const POLL_MS  = 12000;
 const APP_PWD  = 'LM2026'; // ← Mot de passe de l'application
@@ -1380,18 +1395,45 @@ async function sheetRead(){
   if(bk){ try{ const d=JSON.parse(bk); if(d&&d.rayons) return d; }catch(e){} }
   return null;
 }
+async function writeToJSONBin(payload){
+  const resp = await fetch(JSONBIN_URL, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
+    body: payload
+  });
+  if(!resp.ok) throw new Error('JSONBin HTTP ' + resp.status);
+}
+
+async function writeToGAS(payload){
+  const fd = new FormData();
+  fd.append('payload', payload);
+  const resp = await fetch(GAS_URL, {method:'POST', body:fd});
+  const text = await resp.text();
+  if(text.startsWith('error:')) throw new Error('GAS: ' + text);
+}
+
+let _syncErrorCount = 0;
 async function sheetWrite(data){
-  localStorage.setItem('lm_state_bk', JSON.stringify(data));
-  try{
-    await fetch(JSONBIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_KEY
-      },
-      body: JSON.stringify(data)
-    });
-  } catch(e){ console.warn('JSONBin write error:', e); }
+  const payload = JSON.stringify(data);
+  // Sauvegarde locale immédiate (toujours)
+  try { localStorage.setItem('lm_state_bk', payload); } catch(e){}
+
+  // Sauvegarde simultanée JSONBin + GAS
+  const results = await Promise.allSettled([
+    writeToJSONBin(payload),
+    writeToGAS(payload)
+  ]);
+
+  const jsonbinOk = results[0].status === 'fulfilled';
+  const gasOk     = results[1].status === 'fulfilled';
+
+  if(!jsonbinOk && !gasOk){
+    _syncErrorCount++;
+    throw new Error('Les deux sauvegardes ont échoué');
+  }
+  _syncErrorCount = 0;
+  if(!jsonbinOk) console.warn('⚠️ JSONBin a échoué, GAS OK');
+  if(!gasOk)     console.warn('⚠️ GAS a échoué, JSONBin OK');
 }
 
 // ══ CONFIG ══
@@ -1511,9 +1553,22 @@ async function loadData(){
 async function save(msg){
   if(msg){if(!state.log)state.log=[];state.log.unshift({user:currentUser,msg,time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});if(state.log.length>50)state.log=state.log.slice(0,50);}
   render(); isSaving=true; setSyncStatus('syncing');
-  try{await sheetWrite(state);lastHash=JSON.stringify(state);setSyncStatus('ok');}
-  catch(e){setSyncStatus('error');}
-  finally{isSaving=false;}
+  let success=false;
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      await sheetWrite(state);
+      lastHash=JSON.stringify(state);
+      setSyncStatus('ok');
+      success=true;
+      break;
+    } catch(e){
+      if(attempt<3){
+        await new Promise(r=>setTimeout(r,1500*attempt)); // attendre avant retry
+      }
+    }
+  }
+  if(!success) setSyncStatus('error', _syncErrorCount>2?'repeat':null);
+  isSaving=false;
 }
 
 function startPolling(){
