@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Remodeling LM</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -92,6 +92,7 @@
       <button class="top-nav-btn active" id="desk-tab-op" onclick="switchView('operationnel')">📋 Opérationnel</button>
       <button class="top-nav-btn" id="desk-tab-pil" onclick="switchView('pilotage')">📅 Pilotage</button>
       <button class="top-nav-btn" id="desk-tab-log" onclick="switchView('logistique')">🚚 Logistique</button>
+      <button class="top-nav-btn" id="desk-tab-plan" onclick="switchView('plan')">🗺️ Plan</button>
     </div>
     <div class="topbar-right">
       <div class="sync-row"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Connecté</span></div>
@@ -161,7 +162,7 @@
       <div class="col-head">
         <button class="col-collapse-btn" onclick="toggleCollapse('col-detail')" title="Réduire">▶</button>
         <span class="col-head-lbl">✅ Détail</span>
-        <button class="mobile-close-sheet" onclick="closeMobileSheet()" style="display:none;background:var(--bg3);border:none;padding:5px 10px;border-radius:6px;font-weight:bold;">✕ Retour</button>
+        <button class="mobile-close-sheet" onclick="closeMobileSheet()" style="display:none;background:var(--green);color:white;border:none;padding:8px 16px;border-radius:8px;font-weight:bold;font-size:14px;box-shadow:var(--shadow-sm);margin-right:10px;gap:6px;align-items:center;">⬅ Retour</button>
       </div>
       <div class="detail" id="detail">
         <div class="detail-empty"><div class="detail-empty-icon">📋</div><div class="detail-empty-txt">Sélectionnez un sous-rayon</div></div>
@@ -207,7 +208,10 @@
     <div class="col-panel col-flex" id="col-teamtasks" style="min-width:220px;width:auto">
       <div class="col-head">
         <button class="col-collapse-btn" onclick="toggleCollapse('col-teamtasks')" title="Réduire">▶</button>
-        <span class="col-head-lbl">👥 Équipe</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="col-head-lbl">👥 Équipe</span>
+          <button onclick="resetAssign()" style="background:var(--bg3);border:none;padding:5px 10px;border-radius:6px;font-weight:600;font-size:12px;cursor:pointer;" title="Réinitialiser les attributions">⟲ Réinitialiser</button>
+        </div>
         <div class="col-collapsed-icon"><span class="col-ci-emoji">👥</span><span class="col-ci-label">Équipe</span></div>
       </div>
       <div class="col-body" id="teamtasks-body">
@@ -228,9 +232,12 @@
         <span class="col-head-lbl">🚚 Logistique</span>
         <div class="col-collapsed-icon"><span class="col-ci-emoji">🚚</span><span class="col-ci-label">Logistique</span></div>
       </div>
-      <div class="logi-search-wrap">
-        <input class="logi-search-inp" id="logi-search" type="text" placeholder="🔍 Rechercher par sous-rayon ou rayon…" oninput="logiSearch(this.value)"/>
-        <button class="logi-search-clear" onclick="logiClearSearch()" title="Effacer">×</button>
+      <div class="logi-search-wrap" style="padding: 24px 20px; background: var(--bg2); border-bottom: 1px solid var(--border);">
+        <div style="font-weight: 800; font-size: 16px; margin-bottom: 12px; color: var(--text);">🔍 Recherche de commande</div>
+        <div style="position:relative; width: 100%;">
+          <input class="logi-search-inp" id="logi-search" type="text" placeholder="Entrez le n° de commande (ex: 12345)..." oninput="logiSearch(this.value)" style="width:100%; padding: 14px 45px 14px 20px; font-size: 16px; font-weight: 600; border: 2px solid var(--border); border-radius: 12px; box-sizing:border-box; background: var(--bg); color: var(--text); outline:none; transition: border .2s;"/>
+          <button class="logi-search-clear" onclick="logiClearSearch()" title="Effacer" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); font-size:24px; color:var(--text3); border:none; background:transparent; cursor:pointer;">×</button>
+        </div>
       </div>
       <div class="logi-filters" id="logi-filters">
         <button class="logi-filter-btn active" data-filter="all" onclick="logiSetFilter('all')">Tout</button>
@@ -249,8 +256,31 @@
         <div class="logi-empty">Aucune commande renseignée.</div>
       </div>
     </div>
-
     </div> <!-- FIN VUE LOGISTIQUE -->
+
+    <!-- VUE PLAN -->
+    <div class="app-view" id="view-plan" style="display:none; flex-direction:column; align-items:center; background:var(--bg); overflow-y:auto; padding:20px;">
+      <div style="width:100%; max-width:800px; display:flex; flex-direction:column; gap:30px; align-items:center;">
+        <div style="font-size:24px; font-weight:900; color:var(--text); width:100%; padding-bottom:15px; border-bottom:2px solid var(--border); margin-bottom:10px;">🗺️ Plan du rayon</div>
+        
+        <div style="text-align:center; width:100%;">
+          <div style="color:var(--text2); font-size:16px; font-weight:800; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Accessoires de Rgt</div>
+          <img src="plan1.png" alt="Accessoires de Rgt" style="max-width:100%; border-radius:12px; box-shadow:var(--shadow-sm);" onerror="this.style.display='none'">
+        </div>
+        <div style="text-align:center; width:100%;">
+          <div style="color:var(--text2); font-size:16px; font-weight:800; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Rangement</div>
+          <img src="plan2.png" alt="Rangement" style="max-width:100%; border-radius:12px; box-shadow:var(--shadow-sm);" onerror="this.style.display='none'">
+        </div>
+        <div style="text-align:center; width:100%;">
+          <div style="color:var(--text2); font-size:16px; font-weight:800; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Conception DID</div>
+          <img src="plan3.png" alt="Conception DID" style="max-width:100%; border-radius:12px; box-shadow:var(--shadow-sm);" onerror="this.style.display='none'">
+        </div>
+        <div style="text-align:center; width:100%;">
+          <div style="color:var(--text2); font-size:16px; font-weight:800; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Plans et éviers</div>
+          <img src="plan4.png" alt="Plans et éviers" style="max-width:100%; border-radius:12px; box-shadow:var(--shadow-sm);" onerror="this.style.display='none'">
+        </div>
+      </div>
+    </div> <!-- FIN VUE PLAN -->
 
   </div>
   <div class="log-bar" id="log-bar"><span style="color:var(--text3)">Aucune activité récente.</span></div>
@@ -269,6 +299,10 @@
       <span class="mobile-tab-icon">🚚</span>
       <span class="mobile-tab-label">Logistique</span>
       <span class="mobile-tab-badge" id="mobile-badge-logi" style="display:none"></span>
+    </button>
+    <button class="mobile-tab" id="tab-plan" onclick="switchView('plan')">
+      <span class="mobile-tab-icon">🗺️</span>
+      <span class="mobile-tab-label">Plan</span>
     </button>
   </nav>
 </div>

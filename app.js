@@ -419,8 +419,11 @@ function render(){
           ${statusBadge(r)}${(r.tasks||[]).some(t=>isTaskFinalized(t))?`<span style="font-size:11px;font-weight:700;color:#1a6b32;background:#e8f5ec;padding:2px 7px;border-radius:99px;">🏁 ${finalizedCount(r)}</span>`:'' }
         </div>
         <div class="rc-bar-row">
-          <div class="rc-track"><div class="rc-fill" style="width:${p}%;background:${c}"></div></div>
-          <span class="rc-pct" style="color:${c}">${p}%</span>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);">Préparation implantation</div>
+          <div style="display:flex;align-items:center;gap:10px;width:100%;">
+            <div class="rc-track"><div class="rc-fill" style="width:${p}%;background:${c}"></div></div>
+            <span class="rc-pct" style="color:${c}">${p}%</span>
+          </div>
         </div>
         <button class="rc-del" onclick="event.stopPropagation();delRayon('${r.id}')">×</button>`;
       sl.appendChild(div);
@@ -676,6 +679,7 @@ function toggleSubtask(rid,tid,idx){
 }
 function setTaskStatus(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.status=v;t.done=(v==='Fait');save(`Statut "${t.label}" → ${v}`);}
 function setTaskAssign(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.assign=v;save(`Assigné "${t.label}" → ${v||'—'}`);}
+function resetAssign(){if(confirm("Voulez-vous réinitialiser toutes les attributions de l'équipe ?")){ (state.rayons||[]).forEach(r=>(r.tasks||[]).forEach(t=>t.assign='')); save("Attributions réinitialisées"); render(); }}
 function setUrgent(rid,tid,v){const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;const t=(r.tasks||[]).find(x=>x.id===tid);if(!t)return;t.urgent=v;save(`${v?'⚡ Urgent':'Urgence retirée'} : "${t.label}"`);}
 
 
@@ -1556,7 +1560,8 @@ function switchView(viewName) {
   document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
   let deskTab = document.getElementById(
     viewName === 'operationnel' ? 'desk-tab-op' :
-    viewName === 'pilotage' ? 'desk-tab-pil' : 'desk-tab-log'
+    viewName === 'pilotage' ? 'desk-tab-pil' : 
+    viewName === 'plan' ? 'desk-tab-plan' : 'desk-tab-log'
   );
   if(deskTab) deskTab.classList.add('active');
   
@@ -1564,7 +1569,8 @@ function switchView(viewName) {
   document.querySelectorAll('.mobile-tab').forEach(b => b.classList.remove('active'));
   let mobTab = document.getElementById(
     viewName === 'operationnel' ? 'tab-op' :
-    viewName === 'pilotage' ? 'tab-pil' : 'tab-log'
+    viewName === 'pilotage' ? 'tab-pil' : 
+    viewName === 'plan' ? 'tab-plan' : 'tab-log'
   );
   if(mobTab) mobTab.classList.add('active');
 }
