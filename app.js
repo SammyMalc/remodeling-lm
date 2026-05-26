@@ -128,24 +128,20 @@ function migrate(r){
   });
 }
 
+let isOfflineMode = false;
+
 // ══ GAS / SHEET ══
 async function sheetRead(){
   // Lecture avec clé d'accès publique uniquement
-  try {
-    const r = await fetch(JSONBIN_URL + '/latest', {
-      headers: { 'X-Access-Key': JSONBIN_READ_KEY, 'X-Bin-Meta': 'false' },
-      cache: 'no-store'
-    });
-    if(r.ok){
-      const data = await r.json();
-      if(data && data.rayons) return data;
-    }
-  } catch(e){ console.warn('JSONBin lecture échouée:', e); }
-
-  // Fallback : localStorage
-  const bk = localStorage.getItem('lm_state_bk');
-  if(bk){ try{ const d=JSON.parse(bk); if(d&&d.rayons) return d; }catch(e){} }
-  return null;
+  const r = await fetch(JSONBIN_URL + '/latest', {
+    headers: { 'X-Access-Key': JSONBIN_READ_KEY, 'X-Bin-Meta': 'false' },
+    cache: 'no-store'
+  });
+  if(r.ok){
+    const data = await r.json();
+    if(data && data.rayons) return data;
+  }
+  throw new Error('Erreur réseau ou données invalides depuis JSONBin');
 }
 async function writeToJSONBin(payload){
   const resp = await fetch(JSONBIN_URL, {
@@ -247,17 +243,10 @@ async function loadData(){
   document.getElementById('ld-err').style.display='none';
   document.getElementById('ld-retry').style.display='none';
   document.getElementById('ld-msg').style.display='block';
-  ldMsg('Chargement…');
+  ldMsg('Synchronisation avec le Cloud en cours...');
   hideSplash(); // Sécurité — masquer le splash dans tous les cas
 
-  // Timeout de sécurité : démarre quoi qu'il arrive après 8 secondes
-  const safetyTimer = setTimeout(()=>{
-    console.warn('Timeout — démarrage avec données locales');
-    startWithLocalData();
-  }, 8000);
-
   function startWithLocalData(){
-    clearTimeout(safetyTimer);
     const bk=localStorage.getItem('lm_state_bk');
     if(bk){try{state=JSON.parse(bk);}catch(e){}}
     if(!state.rayons){state={version:DATA_VERSION,rayons:JSON.parse(JSON.stringify(DEFAULT_RAYONS)),log:[]};}
@@ -271,9 +260,18 @@ async function loadData(){
 
   try{
     let data=null;
-    try{data=await sheetRead();}catch(e){
-      const bk=localStorage.getItem('lm_state_bk');
-      if(bk){try{data=JSON.parse(bk);}catch(e2){}}
+    try{
+      data = await sheetRead();
+    }catch(e){
+      // Échec de la lecture cloud
+      if (confirm("Le serveur Cloud est injoignable.\\n\\nVoulez-vous charger vos données locales en Mode Hors-ligne ?\\n\\nAttention : Si vous modifiez des données en hors-ligne, elles ne seront pas envoyées au Cloud pour éviter d'écraser le travail de vos collègues.")) {
+        isOfflineMode = true;
+        setSyncStatus('offline');
+        startWithLocalData();
+        return;
+      } else {
+        throw e; // Laisse l'erreur s'afficher pour forcer le retry
+      }
     }
     if(data&&data.rayons){
       state=data;
@@ -296,14 +294,23 @@ async function loadData(){
     state.rayons.forEach(migrate);
     if(!state.retro)state.retro=[];
     lastHash=JSON.stringify(state);
-    clearTimeout(safetyTimer);
     setTimeout(()=>{document.getElementById('loading').style.display='none';document.getElementById('app').style.display='flex';render();startPolling();hideSplash();},300);
-  }catch(e){ldErr('<strong>Erreur</strong><br>'+e.message+'<br><br>Vérifiez votre connexion et le déploiement Apps Script.');}
+  }catch(e){
+    document.getElementById('ld-retry').style.display='inline-block';
+    ldErr('<strong>Erreur de synchronisation</strong><br>Impossible de charger les données du Cloud.<br><br>Vérifiez votre connexion internet.');
+  }
 }
 
 // ══ SAVE ══
 async function save(msg){
   if(msg){if(!state.log)state.log=[];state.log.unshift({user:currentUser,msg,time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});if(state.log.length>50)state.log=state.log.slice(0,50);}
+  
+  if(isOfflineMode) {
+    try { localStorage.setItem('lm_state_bk', JSON.stringify(state)); } catch(e){}
+    render();
+    return;
+  }
+
   render(); isSaving=true; setSyncStatus('syncing');
   let success=false;
   for(let attempt=1;attempt<=3;attempt++){
@@ -319,14 +326,17 @@ async function save(msg){
       }
     }
   }
-  if(!success) setSyncStatus('error', _syncErrorCount>2?'repeat':null);
+  if(!success) {
+    setSyncStatus('error');
+    alert("⚠️ ERREUR DE SYNCHRONISATION ⚠️\\n\\nImpossible d'enregistrer vos modifications sur le Cloud.\\nVérifiez votre connexion internet.\\n\\n(Vos modifications ont été sauvegardées sur cet appareil uniquement)");
+  }
   isSaving=false;
 }
 
 function startPolling(){
   clearInterval(pollTimer);
   pollTimer=setInterval(async()=>{
-    if(isSaving)return;
+    if(isOfflineMode || isSaving)return;
     if(document.activeElement && document.activeElement.classList.contains('td-notes'))return;
     try{const r=await sheetRead();if(!r||!r.rayons)return;const h=JSON.stringify(r);if(h!==lastHash){lastHash=h;state=r;if(!state.log)state.log=[];state.rayons.forEach(migrate);render();}setSyncStatus('ok');}
     catch(e){setSyncStatus('error');}
@@ -336,7 +346,8 @@ function setSyncStatus(s){
   const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-label');
   if(s==='ok'){dot.className='sync-dot';lbl.textContent='Connecté';}
   else if(s==='syncing'){dot.className='sync-dot syncing';lbl.textContent='Sync…';}
-  else{dot.className='sync-dot error';lbl.textContent='Hors-ligne';}
+  else if(s==='offline'){dot.className='sync-dot error';lbl.textContent='Hors-ligne'; dot.style.background='var(--orange)';}
+  else{dot.className='sync-dot error';lbl.textContent='Erreur Sync'; dot.style.background='var(--red)';}
 }
 
 // ══ RENDER ══
@@ -1710,3 +1721,15 @@ function handleSwipe() {
     }
   }
 }
+
+// ══ INITIALISATION VIEWER.JS POUR LES PLANS ══
+document.addEventListener('DOMContentLoaded', () => {
+  const gallery = document.getElementById('plan-gallery');
+  if (gallery) {
+    new Viewer(gallery, {
+      toolbar: { zoomIn: 1, zoomOut: 1, oneToOne: 1, reset: 1, prev: 0, play: 0, next: 0, rotateLeft: 0, rotateRight: 0, flipHorizontal: 0, flipVertical: 0 },
+      navbar: false,
+      title: false
+    });
+  }
+});
