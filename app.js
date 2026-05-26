@@ -132,16 +132,27 @@ let isOfflineMode = false;
 
 // ══ GAS / SHEET ══
 async function sheetRead(){
-  // Lecture avec clé d'accès publique uniquement
-  const r = await fetch(JSONBIN_URL + '/latest', {
-    headers: { 'X-Access-Key': JSONBIN_READ_KEY, 'X-Bin-Meta': 'false' },
-    cache: 'no-store'
-  });
-  if(r.ok){
-    const data = await r.json();
-    if(data && data.rayons) return data;
+  // Lecture avec clé d'accès publique uniquement (avec Timeout de 5s)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  
+  try {
+    const r = await fetch(JSONBIN_URL + '/latest', {
+      headers: { 'X-Access-Key': JSONBIN_READ_KEY, 'X-Bin-Meta': 'false' },
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    if(r.ok){
+      const data = await r.json();
+      if(data && data.rayons) return data;
+    }
+    throw new Error('Erreur réseau ou données invalides depuis JSONBin');
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw new Error('Erreur de connexion (Timeout ou réseau)');
   }
-  throw new Error('Erreur réseau ou données invalides depuis JSONBin');
 }
 async function writeToJSONBin(payload){
   const resp = await fetch(JSONBIN_URL, {
