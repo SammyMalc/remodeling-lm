@@ -1,9 +1,6 @@
 // ══ CONFIG ══
-const JSONBIN_ID      = '69d51152856a6821890a3846';
-const JSONBIN_KEY     = '$2a$10$qMJ4J.xs3uQaoKneSBNZ/O9fHb2W2grN/PrhwIBGhwgUiWX82w4g.';
-const JSONBIN_READ_KEY= '$2a$10$aY9pWpTN5QMqGrnBwMCHuu4ASXoV7FDsyOAq.IyySs5uuYDmqER0e';
-const JSONBIN_URL     = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
-const GAS_URL         = 'https://script.google.com/macros/s/AKfycby5GIrK06tldgPvZIdNMd4G7xMC63O_jATLSz8sUHhY4pEpP177a5kPxM7viWvo0OQlUQ/exec';
+const SUPABASE_URL = 'https://gsunfwmembmketvvrjfy.supabase.co/rest/v1/';
+const SUPABASE_KEY = 'sb_publishable_gn-xpz9KYJ3-7b2TkNSNeQ_v7OcMZhj';
 const LS_USER  = 'lm_user_v2';
 const POLL_MS  = 12000;
 const APP_PWD  = 'LM2026'; // ← Mot de passe de l'application
@@ -130,45 +127,46 @@ function migrate(r){
 
 let isOfflineMode = false;
 
-// ══ GAS / SHEET ══
+// ══ SUPABASE ══
 async function sheetRead(){
-  // Lecture avec clé d'accès publique uniquement (avec Timeout de 5s)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
   
   try {
-    const r = await fetch(JSONBIN_URL + '/latest', {
-      headers: { 'X-Access-Key': JSONBIN_READ_KEY, 'X-Bin-Meta': 'false' },
+    const r = await fetch(SUPABASE_URL + 'app_state?id=eq.1&select=data', {
+      headers: { 
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
       cache: 'no-store',
       signal: controller.signal
     });
     clearTimeout(timeoutId);
     
     if(r.ok){
-      const data = await r.json();
-      if(data && data.rayons) return data;
+      const rows = await r.json();
+      if(rows && rows.length > 0 && rows[0].data && rows[0].data.rayons) return rows[0].data;
     }
-    throw new Error('Erreur réseau ou données invalides depuis JSONBin');
+    throw new Error('Erreur réseau ou données invalides depuis Supabase');
   } catch (error) {
     clearTimeout(timeoutId);
     throw new Error('Erreur de connexion (Timeout ou réseau)');
   }
 }
-async function writeToJSONBin(payload){
-  const resp = await fetch(JSONBIN_URL, {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
-    body: payload
-  });
-  if(!resp.ok) throw new Error('JSONBin HTTP ' + resp.status);
-}
 
-async function writeToGAS(payload){
-  const fd = new FormData();
-  fd.append('payload', payload);
-  const resp = await fetch(GAS_URL, {method:'POST', body:fd});
-  const text = await resp.text();
-  if(text.startsWith('error:')) throw new Error('GAS: ' + text);
+async function writeToSupabase(data){
+  const resp = await fetch(SUPABASE_URL + 'app_state?id=eq.1', {
+    method: 'PATCH',
+    headers: { 
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ data: data })
+  });
+  if(!resp.ok) throw new Error('Supabase HTTP ' + resp.status);
 }
 
 let _syncErrorCount = 0;
@@ -177,22 +175,15 @@ async function sheetWrite(data){
   // Sauvegarde locale immédiate (toujours)
   try { localStorage.setItem('lm_state_bk', payload); } catch(e){}
 
-  // Sauvegarde simultanée JSONBin + GAS
-  const results = await Promise.allSettled([
-    writeToJSONBin(payload),
-    writeToGAS(payload)
-  ]);
-
-  const jsonbinOk = results[0].status === 'fulfilled';
-  const gasOk     = results[1].status === 'fulfilled';
-
-  if(!jsonbinOk && !gasOk){
+  // Sauvegarde Supabase
+  try {
+    await writeToSupabase(data);
+    _syncErrorCount = 0;
+  } catch(e) {
     _syncErrorCount++;
-    throw new Error('Les deux sauvegardes ont échoué');
+    if(_syncErrorCount > 2) console.error("Échecs répétés Cloud:", e);
+    throw e;
   }
-  _syncErrorCount = 0;
-  if(!jsonbinOk) console.warn('⚠️ JSONBin a échoué, GAS OK');
-  if(!gasOk)     console.warn('⚠️ GAS a échoué, JSONBin OK');
 }
 
 // ══ CONFIG ══
