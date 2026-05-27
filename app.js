@@ -128,6 +128,23 @@ function migrate(r){
 let isOfflineMode = false;
 
 // ══ SUPABASE ══
+let lastKnownVersion = null;
+
+async function checkSupabaseVersion() {
+  // Requête ultra-légère qui ne télécharge QUE le numéro de version, pas les données
+  const r = await fetch(SUPABASE_URL + 'app_state?id=eq.1&select=data->version', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    cache: 'no-store'
+  });
+  if(r.ok) {
+    const rows = await r.json();
+    if(rows && rows.length > 0 && rows[0].version !== undefined) {
+      return rows[0].version;
+    }
+  }
+  return null;
+}
+
 async function sheetRead(){
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -146,9 +163,19 @@ async function sheetRead(){
     
     if(r.ok){
       const rows = await r.json();
-      if(rows && rows.length > 0 && rows[0].data && rows[0].data.rayons) return rows[0].data;
+      if(rows && rows.length > 0) {
+        const d = rows[0].data;
+        if(d && d.rayons) {
+          lastKnownVersion = d.version || Date.now();
+          return d;
+        }
+        // La ligne existe mais pas de données valides (initialisation)
+        return null; 
+      }
+      // Aucune ligne (initialisation)
+      return null;
     }
-    throw new Error('Erreur réseau ou données invalides depuis Supabase');
+    throw new Error('Supabase HTTP erreur ' + r.status);
   } catch (error) {
     clearTimeout(timeoutId);
     throw new Error('Erreur de connexion (Timeout ou réseau)');
@@ -156,23 +183,25 @@ async function sheetRead(){
 }
 
 async function writeToSupabase(data){
-  const resp = await fetch(SUPABASE_URL + 'app_state?id=eq.1', {
-    method: 'PATCH',
+  data.version = Date.now(); // Mise à jour de la version à chaque sauvegarde
+  lastKnownVersion = data.version;
+  const resp = await fetch(SUPABASE_URL + 'app_state', {
+    method: 'POST',
     headers: { 
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
+      'Prefer': 'resolution=merge-duplicates, return=minimal'
     },
-    body: JSON.stringify({ data: data })
+    body: JSON.stringify({ id: 1, data: data })
   });
   if(!resp.ok) throw new Error('Supabase HTTP ' + resp.status);
 }
 
 let _syncErrorCount = 0;
 async function sheetWrite(data){
+  // Sauvegarde locale immédiate
   const payload = JSON.stringify(data);
-  // Sauvegarde locale immédiate (toujours)
   try { localStorage.setItem('lm_state_bk', payload); } catch(e){}
 
   // Sauvegarde Supabase
@@ -338,11 +367,30 @@ async function save(msg){
 function startPolling(){
   clearInterval(pollTimer);
   pollTimer=setInterval(async()=>{
-    if(isOfflineMode || isSaving)return;
-    if(document.activeElement && document.activeElement.classList.contains('td-notes'))return;
-    try{const r=await sheetRead();if(!r||!r.rayons)return;const h=JSON.stringify(r);if(h!==lastHash){lastHash=h;state=r;if(!state.log)state.log=[];state.rayons.forEach(migrate);render();}setSyncStatus('ok');}
+    if(isOfflineMode || isSaving) return;
+    if(document.activeElement && document.activeElement.classList.contains('td-notes')) return;
+    try {
+      // 1. Vérification ultra-légère
+      const remoteVersion = await checkSupabaseVersion();
+      if (!remoteVersion) return; // Erreur ou aucune donnée
+      
+      // 2. Ne télécharger que si la version distante est plus récente
+      if (remoteVersion !== lastKnownVersion) {
+        const r = await sheetRead();
+        if(!r || !r.rayons) return;
+        const h = JSON.stringify(r);
+        if(h !== lastHash){
+          lastHash = h;
+          state = r;
+          if(!state.log) state.log = [];
+          state.rayons.forEach(migrate);
+          render();
+        }
+      }
+      setSyncStatus('ok');
+    }
     catch(e){setSyncStatus('error');}
-  },POLL_MS);
+  }, POLL_MS);
 }
 function setSyncStatus(s){
   const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-label');
