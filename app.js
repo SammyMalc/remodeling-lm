@@ -620,13 +620,6 @@ function renderDetail(){
                 <button class="td-cmd-status ${cmdStatusClass(c.status)}" onclick="cycleCmdStatus('${r.id}','${t.id}',${i})">${c.status||'En attente'}</button>
                 <button class="td-cmd-del" style="margin-left:auto" onclick="delCmd('${r.id}','${t.id}',${i})">×</button>
               </div>
-              <div class="td-cmd-rdv">
-                <span class="td-cmd-rdv-label">📅 RDV retrait :</span>
-                <input class="td-cmd-rdv-inp" type="date" value="${c.rdv||''}" onchange="setRdv('${r.id}','${t.id}',${i},this.value)" title="Date du rendez-vous de retrait"/>
-                ${c.rdv
-                  ? '<span class="td-cmd-rdv-badge rdv-ok">✅ RDV confirmé</span>'
-                  : '<span class="td-cmd-rdv-badge rdv-none">⏳ RDV à prendre</span>'}
-              </div>
               <div class="td-cmd-rdv" style="margin-top:2px;">
                 <span class="td-cmd-rdv-label">🏷️ Type :</span>
                 <select class="td-cmd-inp" style="font-size:13px;padding:5px 10px;width:auto;" onchange="setCmdCategorie('${r.id}','${t.id}',${i},this.value)">
@@ -797,7 +790,6 @@ function cmdCatBadge(cat){
 }
 // ══ COMMANDES ══
 const CMD_STATUSES = ['En attente','Reçue'];
-let _logiFilter = 'all';
 let _logiQuery = '';
 
 function logiSearch(v){
@@ -854,17 +846,9 @@ function cycleCmdStatus(rid,tid,idx){
   save('🚚 Statut commande "'+c.num+'" → '+c.status);
 }
 
-function logiSetFilter(f){
-  _logiFilter=f;
-  document.querySelectorAll('.logi-filter-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.filter===f);
-  });
-  renderLogistique();
-}
 
 function renderLogistique(){
   const body = document.getElementById('logi-body');
-  const summary = document.getElementById('logi-summary');
   if(!body) return;
 
   // Collecter toutes les commandes
@@ -877,112 +861,32 @@ function renderLogistique(){
     });
   });
 
-  // ── Section RDV à venir (horizon 7 jours) ──
-  const rdvBody = document.getElementById('logi-rdv-body');
-  if(rdvBody){
-    const todayRdv=new Date();todayRdv.setHours(0,0,0,0);
-    const rdvItems = all
-      .filter(({cmd})=> cmd.rdv && cmd.status!=='Reçue')
-      .map(({cmd,idx,task,rayon})=>({cmd,idx,task,rayon,diff:rdvDiff(cmd.rdv)}))
-      .filter(x=> x.diff !== null && x.diff <= RDV_HORIZON)
-      .sort((a,b)=>a.diff-b.diff);
-
-    if(!rdvItems.length){
-      rdvBody.innerHTML='<div class="logi-rdv-empty">Aucun RDV dans les 3 prochains jours.</div>';
-    } else {
-      rdvBody.innerHTML = rdvItems.map(({cmd,diff})=>{
-        const cls = diff<=0?'rdv-urgent':diff<=3?'rdv-proche':'rdv-ok';
-        return '<div class="logi-rdv-card '+cls+'">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between">'
-          +'<span class="logi-rdv-num">📦 '+esc(cmd.num)+'</span>'
-          +'<span class="logi-rdv-date '+cls+'">'+formatCmdDate(cmd.rdv)+'</span>'
-          +'</div>'
-          +'<span class="td-cmd-rdv-badge '+cls+'" style="margin-top:3px;display:inline-block">'+rdvBadgeLabel(cmd.rdv)+'</span>'
-          +'</div>';
-      }).join('');
-    }
-
-    // Badge mobile — RDV urgents (aujourd'hui ou dépassés)
-    const nUrgent = all.filter(({cmd})=>cmd.rdv&&cmd.status!=='Reçue'&&(rdvDiff(cmd.rdv)||1)<=0).length;
-    const badge=document.getElementById('mobile-badge-logi');
-    if(badge){if(nUrgent>0){badge.textContent=nUrgent;badge.style.display='flex';}else badge.style.display='none';}
+  if(!_logiQuery){
+    body.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; color:var(--text3); font-size:15px; font-weight:600; line-height:1.5;">
+        <div style="font-size:32px; margin-bottom:12px;">🔍</div>
+        Saisissez un numéro de commande dans la barre de recherche ci-dessus pour retrouver ses détails (rayon, sous-rayon, statut d'arrivage).
+      </div>
+    `;
+    return;
   }
 
-  // Stats arrivages
+  const filtered = all.filter(({cmd})=>
+    cmd.num.toLowerCase().includes(_logiQuery)
+  );
+
+  if(!filtered.length){
+    body.innerHTML = `<div class="logi-empty">Aucune commande correspondante pour "${esc(_logiQuery)}".</div>`;
+    return;
+  }
+
+  // Trier par date d'arrivage
   const today = new Date(); today.setHours(0,0,0,0);
-  let nRetard=0,nAuj=0,nAvenir=0,nRecue=0;
-  all.forEach(({cmd})=>{
-    if(cmd.status==='Reçue'){nRecue++;return;}
-    if(!cmd.date){nAvenir++;return;}
-    const d=new Date(cmd.date);d.setHours(0,0,0,0);
-    if(d<today) nRetard++;
-    else if(d.getTime()===today.getTime()) nAuj++;
-    else nAvenir++;
-  });
-
-  if(summary){
-    summary.innerHTML=[
-      nRetard?'<div class="logi-sum-pill" style="background:#ef444418;color:#b91c1c">🔴 '+nRetard+' en retard</div>':'',
-      nAuj?'<div class="logi-sum-pill" style="background:#f59e0b18;color:#92400e">🟡 '+nAuj+' aujourd\'hui</div>':'',
-      nAvenir?'<div class="logi-sum-pill" style="background:#22c55e18;color:#166534">🟢 '+nAvenir+' à venir</div>':'',
-      nRecue?'<div class="logi-sum-pill" style="background:#64748b18;color:#475569">✅ '+nRecue+' reçue(s)</div>':'',
-    ].join('');
-  }
-
-
-
-  // Filtre recherche
-  // Si recherche active : afficher TOUTES les commandes correspondantes sans filtre statut
-  let filtered;
-  if(_logiQuery){
-    filtered = all.filter(({cmd,task,rayon})=>
-      task.label.toLowerCase().includes(_logiQuery) ||
-      rayon.name.toLowerCase().includes(_logiQuery) ||
-      cmd.num.toLowerCase().includes(_logiQuery)
-    );
-  } else {
-    filtered = all.filter(({cmd})=>{
-      if(_logiFilter==='all') return true;
-      if(_logiFilter==='recue') return cmd.status==='Reçue';
-      if(_logiFilter==='retard'){
-        if(cmd.status==='Reçue') return false;
-        if(!cmd.date) return false;
-        const d=new Date(cmd.date);d.setHours(0,0,0,0);return d<today;
-      }
-      if(_logiFilter==='avenir'){
-        if(cmd.status==='Reçue') return false;
-        if(!cmd.date) return true;
-        const d=new Date(cmd.date);d.setHours(0,0,0,0);return d>=today;
-      }
-      if(_logiFilter==='showroom') return cmd.categorie==='showroom';
-      if(_logiFilter==='implantation') return cmd.categorie==='implantation';
-      return true;
-    });
-  }
-
-  if(!filtered.length){body.innerHTML='<div class="logi-empty">Aucune commande correspondante.</div>';return;}
-
-  // Trier par date
   filtered.sort((a,b)=>{
     const da=a.cmd.date?new Date(a.cmd.date):new Date('9999-12-31');
     const db=b.cmd.date?new Date(b.cmd.date):new Date('9999-12-31');
     return da-db;
   });
-
-  // Grouper par semaine
-  function weekLabel(dateStr){
-    if(!dateStr) return 'Date non définie';
-    const d=new Date(dateStr);d.setHours(0,0,0,0);
-    const today2=new Date();today2.setHours(0,0,0,0);
-    const diff=Math.round((d-today2)/(1000*60*60*24));
-    if(diff<0) return '🔴 En retard';
-    if(diff===0) return '🟡 Aujourd\'hui';
-    if(diff<=6) return '🟢 Cette semaine';
-    if(diff<=13) return '📦 Semaine prochaine';
-    // Sinon semaine ISO
-    const mon=new Date(d);mon.setDate(d.getDate()-d.getDay()+1);
-    return '📅 Sem. du '+mon.getDate()+'/'+(mon.getMonth()+1);
-  }
 
   function cardClass(cmd){
     if(cmd.status==='Reçue') return 'recue';
@@ -992,68 +896,25 @@ function renderLogistique(){
     if(d.getTime()===today.getTime()) return 'auj';
     return 'avenir';
   }
-  function dateClass(cmd){return cardClass(cmd);}
 
-  // Grouper
-  const groups={};
-  filtered.forEach(item=>{
-    const k=weekLabel(item.cmd.date);
-    if(!groups[k])groups[k]=[];
-    groups[k].push(item);
-  });
-
-  body.innerHTML=Object.entries(groups).map(([week,items])=>`
-    <div class="logi-week">
-      <div class="logi-week-hdr">${week}</div>
-      ${items.map(({cmd,idx,task,rayon})=>`
-        <div class="logi-card ${cardClass(cmd)}">
-          <div class="logi-card-header">
-            <span onclick="cycleCmdCategorie('${rayon.id}','${task.id}',${idx})" style="cursor:pointer" title="Cliquer pour changer">${cmdCatBadge(cmd.categorie)}</span>
-            <span class="logi-cmd-num">${esc(cmd.num)}</span>
-            <span class="logi-date ${dateClass(cmd)}" style="margin-left:auto;flex-shrink:0">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
-            <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
-          </div>
-          <div class="logi-detail">📋 ${esc(task.label)} &nbsp;·&nbsp; 📍 ${esc(rayon.name)}</div>
-        </div>`).join('')}
-    </div>`).join('');
+  body.innerHTML = `
+    <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--text3); padding:6px 0 10px 2px; border-bottom:1px solid var(--border); margin-bottom:10px;">
+      Résultats de recherche (${filtered.length})
+    </div>
+    ` + filtered.map(({cmd,idx,task,rayon})=>`
+      <div class="logi-card ${cardClass(cmd)}">
+        <div class="logi-card-header">
+          <span onclick="cycleCmdCategorie('${rayon.id}','${task.id}',${idx})" style="cursor:pointer" title="Cliquer pour changer">${cmdCatBadge(cmd.categorie)}</span>
+          <span class="logi-cmd-num">${esc(cmd.num)}</span>
+          <span class="logi-date ${cardClass(cmd)}" style="margin-left:auto;flex-shrink:0">${cmd.date?formatCmdDate(cmd.date):'—'}</span>
+          <button class="logi-status-btn ${cmdStatusClass(cmd.status)}" onclick="cycleCmdStatus('${rayon.id}','${task.id}',${idx})">${cmd.status||'En attente'}</button>
+        </div>
+        <div class="logi-detail">📋 ${esc(task.label)} &nbsp;·&nbsp; 📍 ${esc(rayon.name)}</div>
+      </div>`).join('');
 }
 
 
-// ══ RDV RETRAIT ══
-const RDV_HORIZON = 3; // jours
 
-function rdvDiff(rdvStr){
-  if(!rdvStr) return null;
-  const today=new Date();today.setHours(0,0,0,0);
-  const d=new Date(rdvStr);d.setHours(0,0,0,0);
-  return Math.round((d-today)/(1000*60*60*24));
-}
-
-function rdvBadgeClass(rdvStr){
-  const diff=rdvDiff(rdvStr);
-  if(diff===null) return 'rdv-none';
-  if(diff<=0) return 'rdv-urgent';
-  if(diff<=3) return 'rdv-proche';
-  return 'rdv-ok';
-}
-
-function rdvBadgeLabel(rdvStr){
-  const diff=rdvDiff(rdvStr);
-  if(diff===null) return 'Aucun RDV';
-  if(diff<0) return 'RDV dépassé !';
-  if(diff===0) return "RDV aujourd'hui !";
-  if(diff===1) return 'RDV demain';
-  if(diff<=3) return 'RDV dans '+diff+'j';
-  return 'RDV dans '+diff+'j';
-}
-
-function setRdv(rid,tid,idx,v){
-  const r=(state.rayons||[]).find(x=>x.id===rid);if(!r)return;
-  const t=(r.tasks||[]).find(x=>x.id===tid);if(!t||!t.cmds)return;
-  const c=t.cmds[idx];if(!c)return;
-  c.rdv=v;
-  save('📅 RDV retrait "'+c.num+'" → '+(v?formatCmdDate(v):'retiré'));
-}
 
 let _notesTimer=null;
 function setNotes(rid,tid,v){
